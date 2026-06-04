@@ -1,0 +1,233 @@
+@model List<LibrarySystem.Models.Book>
+@{
+    ViewData["Title"] = "Books";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+            .page-header h4 {
+                color: #fff;
+                font-weight: 800;
+                margin: 0;
+                font-size: 1.4rem;
+                letter-spacing: -0.3px;
+            }
+
+            .page-header p {
+                color: #64748b;
+                font-size: 0.88rem;
+                margin: 4px 0 0;
+                font-weight: 500;
+            }
+
+        /* Modernized Add Action Button */
+        .btn-add-book {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
+            border: none;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.65rem 1.4rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+            .btn-add-book:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+                color: #fff;
+                opacity: 0.95;
+            }
+
+        /* Clean System Grid Table Container */
+        .data-table-container {
+            background: rgba(11, 11, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .table {
+            margin: 0;
+            color: #cbd5e1;
+        }
+
+            .table thead th {
+                background: rgba(5, 5, 15, 0.8);
+                color: #94a3b8;
+                font-size: 0.72rem;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                border-color: rgba(255, 255, 255, 0.05);
+                padding: 1rem 1.4rem;
+                font-weight: 600;
+            }
+
+            .table tbody td {
+                border-color: rgba(255, 255, 255, 0.03);
+                padding: 1.1rem 1.4rem;
+                vertical-align: middle;
+                font-size: 0.92rem;
+                background: transparent;
+            }
+
+            .table tbody tr:hover td {
+                background: rgba(255, 255, 255, 0.02);
+                color: #fff;
+            }
+
+        .book-title-cell {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .book-author-cell {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .code-spec {
+            color: #60a5fa;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: rgba(37, 99, 235, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        .copies-indicator {
+            font-size: 0.92rem;
+            font-weight: 600;
+        }
+
+        /* High Contrast Neon Status Badges */
+        .badge-status-avail {
+            background: rgba(34, 197, 94, 0.1);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-status-empty {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* Destructive Form Button Control */
+        .btn-remove-destructive {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+            .btn-remove-destructive:hover {
+                background: rgba(239, 68, 68, 0.15);
+                border-color: #ef4444;
+                color: #fca5a5;
+            }
+    </style>
+}
+
+<!-- Content Area Workspace Control Header -->
+<div class="page-header">
+    <div>
+        <h4><i class="bi bi-collection-fill me-2" style="color:#3b82f6;"></i>Books Management</h4>
+        <p>@Model.Count titles indexed across global catalog cluster</p>
+    </div>
+    <a href="/Admin/AddBook" class="btn-add-book">
+        <i class="bi bi-plus-lg"></i> Add New Book
+    </a>
+</div>
+
+<!-- Grid Records Layout System -->
+<div class="data-table-container">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>Author</th>
+                    <th>ISBN Registry</th>
+                    <th>QR Token Endpoint</th>
+                    <th>Stock Allocation</th>
+                    <th>Availability</th>
+                    <th>Operational Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model)
+                {
+                    <tr>
+                        <td><span class="book-title-cell">@b.Title</span></td>
+                        <td><span class="book-author-cell">@b.Author</span></td>
+                        <td><span class="code-spec">@b.ISBN</span></td>
+                        <td><span class="code-spec">@b.QRCode</span></td>
+                        <td>
+                            <div class="copies-indicator">
+                                <span style="color: #4ade80;">@b.AvailableCopies</span>
+                                <span style="color: #475569;"> / @b.TotalCopies</span>
+                            </div>
+                        </td>
+                        <td>
+                            @if (b.AvailableCopies > 0)
+                            {
+                                <span class="badge-status-avail">Available</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status-empty">Unavailable</span>
+                            }
+                        </td>
+                        <td>
+                            <form asp-action="DeleteBook" method="post" style="display:inline; margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@b.BookID" />
+                                <button class="btn-remove-destructive" type="submit"
+                                        onclick="return confirm('Permanently wipe @b.Title from system storage records?')">
+                                    <i class="bi bi-trash-fill me-1"></i> Remove
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

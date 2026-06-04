@@ -1,0 +1,538 @@
+@model List<LibrarySystem.Models.Book>
+@{
+    ViewData["Title"] = "Library Catalog";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            background: rgba(11, 11, 30, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1.4rem 1.8rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 0;
+            letter-spacing: -0.3px;
+        }
+
+        .page-sub {
+            font-size: 0.88rem;
+            color: #64748b;
+            margin: 4px 0 0;
+            font-weight: 500;
+        }
+
+        /* Modernized Back to Dashboard Action Button Control */
+        .btn-back-dashboard {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.55rem 1.2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+            .btn-back-dashboard:hover {
+                background: rgba(37, 99, 235, 0.1);
+                border-color: rgba(59, 130, 246, 0.3);
+                color: #fff;
+            }
+
+        /* Modernized Book Grid Cards */
+        .book-card {
+            background: rgba(11, 11, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem 1.3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+            .book-card:hover {
+                border-color: #3b82f6;
+                transform: translateY(-4px);
+                box-shadow: 0 12px 30px rgba(37, 99, 235, 0.15);
+            }
+
+        .qr-wrap {
+            position: relative;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+            .qr-wrap img {
+                width: 155px;
+                height: 155px;
+                border-radius: 12px;
+                background: #fff;
+                padding: 8px;
+                display: block;
+                transition: all 0.3s;
+            }
+
+        .qr-unavailable {
+            opacity: 0.15;
+            filter: grayscale(1) blur(1px);
+        }
+
+        .unavailable-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 38, 38, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            backdrop-filter: blur(4px);
+            color: #fca5a5;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+        }
+
+        .book-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            text-align: center;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .book-author {
+            font-size: 0.8rem;
+            color: #60a5fa;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .book-qr {
+            font-size: 0.75rem;
+            color: #475569;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        /* Books Copies Neon Indicators */
+        .copies-wrap {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+            .copies-wrap i {
+                font-size: 0.95rem;
+                transition: transform 0.2s;
+            }
+
+        .copy-avail {
+            color: #3b82f6;
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+        }
+
+        .copy-taken {
+            color: #1e1e38;
+        }
+
+        .copies-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 1.2rem;
+            font-weight: 500;
+        }
+
+        /* Action Buttons */
+        .btn-borrow-book {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            border: none;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.65rem 1.2rem;
+            border-radius: 10px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: auto;
+        }
+
+            .btn-borrow-book:hover {
+                transform: scale(0.98);
+                opacity: 0.95;
+                box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+            }
+
+        .btn-unavailable {
+            background: rgba(148, 163, 184, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            color: #475569;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.65rem 1.2rem;
+            border-radius: 10px;
+            width: 100%;
+            cursor: not-allowed;
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* Premium Modular Dynamic Receipt */
+        .receipt-modal-bg {
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 3, 10, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .receipt-box {
+            background: rgba(11, 11, 30, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+            border-radius: 22px;
+            padding: 2.2rem;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @@keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .receipt-box i.big {
+            font-size: 3.2rem;
+            color: #22c55e;
+            filter: drop-shadow(0 4px 10px rgba(34, 197, 94, 0.3));
+        }
+
+        .receipt-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 1rem 0 0.3rem;
+            letter-spacing: -0.3px;
+        }
+
+        .receipt-sub {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-bottom: 1.4rem;
+            font-weight: 500;
+        }
+
+        .receipt-inner {
+            background: rgba(5, 5, 15, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.88rem;
+            padding: 0.55rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+            .receipt-row:last-child {
+                border: none;
+            }
+
+            .receipt-row .label {
+                color: #64748b;
+                font-weight: 500;
+            }
+
+            .receipt-row .value {
+                color: #f1f5f9;
+                font-weight: 600;
+                max-width: 60%;
+                text-align: right;
+            }
+
+                .receipt-row .value.txn {
+                    color: #60a5fa;
+                    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                    font-size: 0.85rem;
+                }
+
+                .receipt-row .value.due {
+                    color: #facc15;
+                    font-weight: 700;
+                }
+
+        .btn-done {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            padding: 0.8rem;
+            border-radius: 12px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+            .btn-done:hover {
+                opacity: 0.95;
+                scale: 0.99;
+            }
+
+        /* Camera Scanner Modular Layout Customizations */
+        .scanner-modal-content {
+            background: rgba(11, 11, 30, 0.95) !important;
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 20px !important;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+            .scanner-modal-content .modal-header {
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                padding: 1.2rem 1.5rem;
+            }
+
+        #scanStatus {
+            color: #60a5fa;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .alert-e {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-radius: 12px;
+            padding: 0.85rem 1.2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+}
+
+@* Receipt Modal Output Box *@
+@if (TempData["Receipt"] != null)
+{
+    var receipt = System.Text.Json.JsonDocument.Parse(TempData["Receipt"]!.ToString()!).RootElement;
+    <div class="receipt-modal-bg" id="receiptModal">
+        <div class="receipt-box">
+            <i class="bi bi-check-circle-fill big"></i>
+            <div class="receipt-title">Book Borrowed!</div>
+            <div class="receipt-sub">Your transaction checkout voucher</div>
+            <div class="receipt-inner">
+                <div class="receipt-row">
+                    <span class="label">Transaction ID</span>
+                    <span class="value txn">@receipt.GetProperty("TxnCode").GetString()</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="label">Book Title</span>
+                    <span class="value">@receipt.GetProperty("BookTitle").GetString()</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="label">Student Profile</span>
+                    <span class="value">@receipt.GetProperty("StudentName").GetString()</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="label">Issue Date</span>
+                    <span class="value">@receipt.GetProperty("IssueDate").GetString()</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="label">Return Deadline</span>
+                    <span class="value due">@receipt.GetProperty("DueDate").GetString()</span>
+                </div>
+            </div>
+            <button class="btn-done" onclick="document.getElementById('receiptModal').remove()">Dismiss Voucher</button>
+        </div>
+    </div>
+}
+
+@* Video Capture QR Scanner Camera Modal Container *@
+<div class="modal fade" id="scannerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content scanner-modal-content border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="text-white fw-bold mb-0">
+                    <i class="bi bi-qr-code-scan me-2" style="color:#3b82f6;"></i>Scan Item Identity
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopScanner()"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-center mb-3" style="font-size:0.85rem; color:#64748b; font-weight: 500;">Position the catalog sticker code within the target container bounds</p>
+                <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; border: 1px solid rgba(255,255,255,0.05);"></div>
+                <p id="scanStatus" class="text-center mt-3 mb-0"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="qrForm" asp-controller="Books" asp-action="Issue" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="qrInput" name="qrCode" />
+</form>
+
+@* Workspace Heading Content Header with Return Controller Action *@
+<div class="page-header">
+    <div>
+        <div class="page-title"><i class="bi bi-grid-3x3-gap-fill me-2" style="color:#3b82f6;"></i>Available Library Catalog</div>
+        <div class="page-sub">@Model.Count items listed — scan any barcode token sheet to initiate automatic reservation</div>
+    </div>
+    <a href="/Student/Dashboard" class="btn-back-dashboard">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert-e"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]</div>
+}
+
+@* Dynamic Inventory Responsive Grid Core System *@
+<div class="row g-4">
+    @foreach (var book in Model)
+    {
+        bool available = book.AvailableCopies > 0;
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="book-card">
+                <div class="qr-wrap">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=@Uri.EscapeDataString(book.QRCode)&ecc=H&margin=10"
+                         alt="QR" class="@(!available ? "qr-unavailable" : "")" />
+                    @if (!available)
+                    {
+                        <div class="unavailable-badge">OUT OF STOCK</div>
+                    }
+                </div>
+
+                <div class="book-title">@book.Title</div>
+                <div class="book-author">@book.Author</div>
+                <div class="book-qr">@book.QRCode</div>
+
+                <div class="copies-wrap">
+                    @for (int i = 1; i <= book.TotalCopies; i++)
+                    {
+                        <i class="bi bi-book-fill @(i <= book.AvailableCopies ? "copy-avail" : "copy-taken")"></i>
+                    }
+                </div>
+                <div class="copies-label">@book.AvailableCopies of @book.TotalCopies available</div>
+
+                @if (available)
+                {
+                    <button class="btn-borrow-book" onclick="startScannerForBook('@book.QRCode')">
+                        <i class="bi bi-qr-code-scan"></i> Scan to Borrow
+                    </button>
+                }
+                else
+                {
+                    <button class="btn-unavailable" disabled>
+                        <i class="bi bi-x-circle-fill"></i> Out of Stock
+                    </button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        var scanner = null;
+        var expectedQR = null;
+
+        function startScannerForBook(qrCode) {
+            expectedQR = qrCode;
+            document.getElementById('scanStatus').className = "text-center mt-3 mb-0";
+            document.getElementById('scanStatus').innerText = 'Initializing camera engine...';
+            var modal = new bootstrap.Modal(document.getElementById('scannerModal'));
+            modal.show();
+
+            document.getElementById('scannerModal').addEventListener('shown.bs.modal', function () {
+                scanner = new Html5Qrcode("reader");
+                scanner.start(
+                    { facingMode: "environment" },
+                    { fps: 12, qrbox: { width: 240, height: 240 } },
+                    function (decodedText) {
+                        if (decodedText === expectedQR) {
+                            document.getElementById('scanStatus').innerText = '✅ Verification match success! Registering checkout...';
+                            scanner.stop().then(function () {
+                                document.getElementById('qrInput').value = decodedText;
+                                document.getElementById('qrForm').submit();
+                            });
+                        } else {
+                            document.getElementById('scanStatus').innerText = '❌ Token validation mismatch. Try again.';
+                        }
+                    },
+                    function (error) {}
+                ).catch(function (err) {
+                    document.getElementById('scanStatus').innerText = 'Camera access intercept fault: ' + err;
+                });
+            }, { once: true });
+        }
+
+        function stopScanner() {
+            if (scanner) { scanner.stop().catch(function () {}); scanner = null; }
+        }
+    </script>
+}

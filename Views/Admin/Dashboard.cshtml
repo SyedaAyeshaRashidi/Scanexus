@@ -1,0 +1,313 @@
+@model List<LibrarySystem.Models.Transaction>
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+            .page-header h4 {
+                color: #fff;
+                font-weight: 800;
+                font-size: 1.4rem;
+                margin: 0;
+                letter-spacing: -0.3px;
+            }
+
+            .page-header p {
+                color: #64748b;
+                font-size: 0.85rem;
+                margin: 4px 0 0;
+                font-weight: 500;
+            }
+
+        /* Modernized Dashboard Grid Cards */
+        .stat-card {
+            background: rgba(11, 11, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            height: 100%;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+            .stat-card:hover {
+                border-color: #3b82f6;
+                transform: translateY(-2px);
+                box-shadow: 0 12px 35px rgba(37, 99, 235, 0.1);
+            }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.1;
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Clean Section Card Container */
+        .section-card {
+            background: rgba(11, 11, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .section-header {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .section-title i {
+                color: #3b82f6;
+                font-size: 18px;
+            }
+
+        /* Sleek Table System */
+        .table {
+            margin: 0;
+            color: #cbd5e1;
+        }
+
+            .table thead th {
+                background: rgba(5, 5, 15, 0.8);
+                color: #94a3b8;
+                font-size: 0.72rem;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                border-color: rgba(255, 255, 255, 0.05);
+                padding: 1rem 1.4rem;
+                font-weight: 600;
+            }
+
+            .table tbody td {
+                border-color: rgba(255, 255, 255, 0.03);
+                padding: 1.1rem 1.4rem;
+                vertical-align: middle;
+                font-size: 0.92rem;
+                background: transparent;
+            }
+
+            .table tbody tr:hover td {
+                background: rgba(255, 255, 255, 0.02);
+                color: #fff;
+            }
+
+        .txn-code {
+            color: #60a5fa;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .student-name {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .student-id {
+            color: #64748b;
+            font-size: 0.78rem;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        .book-title {
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        .date-text {
+            color: #94a3b8;
+            font-size: 0.88rem;
+        }
+
+        /* Modern Status Badges */
+        .badge-active {
+            background: rgba(34, 197, 94, 0.1);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-returned {
+            background: rgba(148, 163, 184, 0.08);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-overdue {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+    </style>
+}
+
+<!-- Header Area -->
+<div class="page-header">
+    <h4><i class="bi bi-grid-1x2-fill me-2" style="color:#3b82f6;"></i>System Overview</h4>
+    <p>Real-time analytics and library activity stream</p>
+</div>
+
+<!-- Grid System Widgets -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15);">
+                <i class="bi bi-collection" style="color:#60a5fa;"></i>
+            </div>
+            <div class="stat-value">@ViewBag.TotalBooks</div>
+            <div class="stat-label">Total Books</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(129, 140, 248, 0.15);">
+                <i class="bi bi-people" style="color:#a5b4fc;"></i>
+            </div>
+            <div class="stat-value" style="color:#a5b4fc;">@ViewBag.TotalStudents</div>
+            <div class="stat-label">Registered Students</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(34, 197, 94, 0.15);">
+                <i class="bi bi-book" style="color:#86efac;"></i>
+            </div>
+            <div class="stat-value" style="color:#86efac;">@ViewBag.ActiveIssues</div>
+            <div class="stat-label">Currently Issued</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.15);">
+                <i class="bi bi-exclamation-triangle" style="color:#fca5a5;"></i>
+            </div>
+            <div class="stat-value" style="color:#fca5a5;">@ViewBag.OverdueIssues</div>
+            <div class="stat-label">Overdue Items</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Log Container -->
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-title">
+            <i class="bi bi-clock-history"></i> Recent Transactions Tracker
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Student Details</th>
+                    <th>Book Title</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Current Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model)
+                {
+                    <tr>
+                        <td><span class="txn-code">@t.TxnCode</span></td>
+                        <td>
+                            <div class="student-name">@t.Student?.FullName</div>
+                            <div class="student-id">@t.Student?.UniversityID</div>
+                        </td>
+                        <td><span class="book-title">@t.Book?.Title</span></td>
+                        <td><span class="date-text">@t.IssueDate.ToString("dd MMM yyyy")</span></td>
+                        <td>
+                            @if (t.DueDate < DateTime.Now && t.Status == "Active")
+                            {
+                                <span style="color: #fca5a5; font-weight: 600;">
+                                    @t.DueDate.ToString("dd MMM yyyy")
+                                </span>
+                            }
+                            else
+                            {
+                                <span style="color: #facc15; font-weight: 500;">
+                                    @t.DueDate.ToString("dd MMM yyyy")
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (t.Status == "Active")
+                            {
+                                <span class="badge-active">Active</span>
+                            }
+                            else if (t.Status == "Returned")
+                            {
+                                <span class="badge-returned">Returned</span>
+                            }
+                            else
+                            {
+                                <span class="badge-overdue">Overdue</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

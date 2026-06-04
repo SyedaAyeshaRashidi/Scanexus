@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Scanexus Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+
+    <style>
+        body {
+            background: #03030a;
+            color: #cbd5e1;
+            padding-top: 95px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Floating Glassmorphic Navbar */
+        .admin-navbar {
+            background: rgba(11, 11, 30, 0.75) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+            padding: 0.6rem 0;
+        }
+
+        /* Custom Toggler Icon Styling */
+        .custom-navbar-toggler {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            padding: 6px 12px;
+            border-radius: 8px;
+            color: #fff;
+            transition: all 0.2s ease;
+        }
+
+            .custom-navbar-toggler:focus {
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+                border-color: #3b82f6;
+            }
+
+        /* Nav Links for Admin Control */
+        .nav-link-admin {
+            color: #94a3b8 !important;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            padding: 0.5rem 1.1rem !important;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .nav-link-admin:hover, .nav-link-admin.active {
+                color: #fff !important;
+                background: rgba(37, 99, 235, 0.1);
+                box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.1);
+            }
+
+        /* API Docs Highlight Accent Color */
+        .nav-link-api {
+            color: #a7f3d0 !important;
+        }
+
+            .nav-link-api:hover {
+                background: rgba(16, 185, 129, 0.1) !important;
+                color: #10b981 !important;
+            }
+
+        /* Uniform Admin Badge (Fixed Alignment) */
+        .admin-badge {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 7px 16px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 38px;
+            white-space: nowrap;
+        }
+
+        /* Uniform Admin Logout Button (Fixed Alignment) */
+        .btn-logout-admin {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 7px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 38px;
+            white-space: nowrap;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+            .btn-logout-admin:hover {
+                background: rgba(239, 68, 68, 0.15);
+                border-color: #ef4444;
+                color: #fca5a5;
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+            }
+    </style>
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top admin-navbar">
+        <div class="container">
+            <!-- Brand Title Case, Slogan & Logo Sync -->
+            <a class="navbar-brand d-flex align-items-center gap-3 text-decoration-none" href="/Admin/Dashboard">
+                <!-- Hexagon Logo Icon Box -->
+                <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #2563eb, #4f46e5); clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);"></div>
+                    <i class="bi bi-qr-code-scan" style="position: relative; z-index: 1; font-size: 1.2rem; color: #ffffff; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);"></i>
+                </div>
+
+                <!-- Branding Typography Setup -->
+                <div class="d-flex flex-column">
+                    <div style="font-size: 1.25rem; font-weight: 800; color: #ffffff; line-height: 1.1; letter-spacing: -0.3px;">
+                        Scan<span style="background: linear-gradient(135deg, #60a5fa, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">exus</span>
+                    </div>
+                    <div style="font-size: 0.72rem; font-weight: 600; color: #94a3b8; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; opacity: 0.9;">
+                        Scan &bull; Borrow &bull; Read
+                    </div>
+                </div>
+            </a>
+
+            <!-- Navbar Responsive Toggler Button -->
+            <button class="navbar-toggler custom-navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbarContent" aria-controls="adminNavbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="bi bi-list" style="font-size: 1.3rem;"></i>
+            </button>
+
+            <!-- Navigation Controls Links -->
+            <div class="collapse navbar-collapse" id="adminNavbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1 mt-3 mt-lg-0 ps-0 ps-lg-3">
+                    @{
+                        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                    }
+
+                    <li>
+                        <a class="nav-link-admin @(currentController == "Admin" && currentAction == "Dashboard" ? "active" : "")" href="/Admin/Dashboard">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link-admin @(currentAction == "Books" || currentAction == "AddBook" ? "active" : "")" href="/Admin/Books">
+                            <i class="bi bi-book"></i> Books
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link-admin @(currentAction == "Students" ? "active" : "")" href="/Admin/Students">
+                            <i class="bi bi-person-badge"></i> Enrolled Members
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link-admin nav-link-api" href="/swagger" target="_blank">
+                            <i class="bi bi-file-earmark-code"></i> API Docs
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Right Side Uniform Framework Identity Controls -->
+                <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-3 mt-3 mt-lg-0 ms-auto">
+                    <span class="admin-badge justify-content-center">
+                        <i class="bi bi-shield-lock-fill"></i> Admin Portal
+                    </span>
+                    <!-- Sahi mapped controller route link -->
+                    <a href="/Student/Logout" class="btn-logout-admin justify-content-center">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container Content Slot -->
+    <div class="container main-wrapper">
+        @RenderBody()
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

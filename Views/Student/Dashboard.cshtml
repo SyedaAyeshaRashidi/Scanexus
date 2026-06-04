@@ -1,0 +1,436 @@
+@model LibrarySystem.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        /* Modern Premium Welcome Card */
+        .welcome-bar {
+            background: rgba(11, 11, 30, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1.6rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .welcome-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+
+        .welcome-meta {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+            .welcome-meta span {
+                color: #94a3b8;
+                font-weight: 600;
+            }
+
+        /* Action Buttons */
+        .btn-borrow {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+            border: none;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.7rem 1.4rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+            .btn-borrow:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+                color: #fff;
+                opacity: 0.95;
+            }
+
+        /* Fluid Grid Stat Cards */
+        .stat-card {
+            background: rgba(11, 11, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            height: 100%;
+            transition: all 0.25s ease;
+        }
+
+            .stat-card:hover {
+                border-color: #3b82f6;
+                transform: translateY(-2px);
+                box-shadow: 0 12px 35px rgba(37, 99, 235, 0.1);
+            }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.4rem;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Content Sections */
+        .section-card {
+            background: rgba(11, 11, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .section-header i {
+                color: #3b82f6;
+                font-size: 18px;
+            }
+
+        /* Clean Matrix Table Style */
+        .table {
+            margin: 0;
+            color: #cbd5e1;
+        }
+
+            .table thead th {
+                background: rgba(5, 5, 15, 0.8);
+                color: #94a3b8;
+                font-size: 0.72rem;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                border-color: rgba(255, 255, 255, 0.05);
+                padding: 1rem 1.4rem;
+                font-weight: 600;
+            }
+
+            .table tbody td {
+                border-color: rgba(255, 255, 255, 0.03);
+                padding: 1.1rem 1.4rem;
+                vertical-align: middle;
+                font-size: 0.92rem;
+            }
+
+            .table tbody tr:hover td {
+                color: #fff;
+            }
+
+        .book-title {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .book-author {
+            color: #60a5fa;
+            font-size: 0.8rem;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        .txn-code {
+            color: #60a5fa;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Soft Glow Neon Status Badges */
+        .badge-active {
+            background: rgba(34, 197, 94, 0.1);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-overdue {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* Action Controls Buttons */
+        .btn-return {
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+
+            .btn-return:hover {
+                background: rgba(239, 68, 68, 0.15);
+                border-color: #ef4444;
+                color: #fca5a5;
+                transform: scale(0.98);
+            }
+
+        /* Styled Empty States Grid */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 1.5rem;
+            color: #475569;
+        }
+
+            .empty-state i {
+                font-size: 3rem;
+                display: block;
+                margin-bottom: 0.8rem;
+                color: #334155;
+            }
+
+            .empty-state a {
+                color: #3b82f6;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+                .empty-state a:hover {
+                    text-decoration: underline;
+                }
+
+        /* Uniform Custom System Notification Alerts */
+        .alert-s {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            border-radius: 12px;
+            padding: 0.85rem 1.2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-e {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-radius: 12px;
+            padding: 0.85rem 1.2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table tbody tr td {
+            background: transparent !important;
+        }
+
+        .table tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.02) !important;
+        }
+    </style>
+}
+
+<!-- Welcome Bar Header Profile -->
+<div class="welcome-bar">
+    <div>
+        <div class="welcome-name">@Model.Student.FullName</div>
+        <div class="welcome-meta">
+            <span>@Model.Student.UniversityID</span> &bull;
+            Semester <span>@Model.Student.Semester</span> &bull;
+            <span>@Model.Student.Batch</span>
+        </div>
+    </div>
+    <a href="/Books/Index" class="btn-borrow">
+        <i class="bi bi-plus-lg"></i> Borrow a Book
+    </a>
+</div>
+
+<!-- Context Message Box Stream -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert-s"><i class="bi bi-check-circle-fill"></i>@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert-e"><i class="bi bi-exclamation-triangle-fill"></i>@TempData["Error"]</div>
+}
+
+<!-- Quantitative Analytics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(34, 197, 94, 0.15);">
+                <i class="bi bi-book-fill" style="color:#86efac;"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color:#86efac;">@Model.ActiveBooks.Count</div>
+                <div class="stat-label">Currently Borrowed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15);">
+                <i class="bi bi-bookmark-fill" style="color:#60a5fa;"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color:#60a5fa;">@Model.BooksRemaining</div>
+                <div class="stat-label">Slots Remaining (Max 3)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(250, 204, 21, 0.15);">
+                <i class="bi bi-clock-history" style="color:#facc15;"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color:#facc15;">@Model.History.Count</div>
+                <div class="stat-label">Books Returned</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Operations Stream Table -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="bi bi-journal-check"></i> Currently Borrowed Books
+    </div>
+    @if (!Model.ActiveBooks.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-inbox-fill"></i>
+            No books borrowed yet. <a href="/Books/Index">Browse catalog</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Book Details</th>
+                        <th>Transaction ID</th>
+                        <th>Issue Date</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.ActiveBooks)
+                    {
+                        <tr>
+                            <td>
+                                <div class="book-title">@t.Book?.Title</div>
+                                <div class="book-author">@t.Book?.Author</div>
+                            </td>
+                            <td><span class="txn-code">@t.TxnCode</span></td>
+                            <td><span class="date-text">@t.IssueDate.ToString("dd MMM yyyy")</span></td>
+                            <td>
+                                @if (t.IsOverdue)
+                                {
+                                    <span style="color: #fca5a5; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                        @t.DueDate.ToString("dd MMM yyyy")
+                                        <span class="badge-overdue" style="padding: 2px 6px; font-size: 0.65rem;">Overdue</span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="color: #facc15; font-weight: 500;">
+                                        @t.DueDate.ToString("dd MMM yyyy")
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (t.IsOverdue)
+                                {
+                                    <span class="badge-overdue">@t.Status</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-active">@t.Status</span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-controller="Student" asp-action="Return" method="post" style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="txnCode" value="@t.TxnCode" />
+                                    <button class="btn-return" type="submit"
+                                            onclick="return confirm('Return this book?')">
+                                        <i class="bi bi-arrow-return-left me-1"></i>Return
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
