@@ -66,11 +66,6 @@ VALUES
 ('978-0-13-2350', 'Computer Networking',       'Kurose Ross',  'Pearson', 4, 4, 'BOOK-004');
 GO
 
-SELECT * FROM Students;
-SELECT * FROM Books;
-PRINT 'Database ready!';
-GO
-
 USE LibraryDB;
 ALTER TABLE Transactions ADD Remarks VARCHAR(300) NULL;
 
@@ -81,26 +76,10 @@ UPDATE Books SET QRCode = 'SSUET-LIB-BOOK-002' WHERE BookID = 2;
 UPDATE Books SET QRCode = 'SSUET-LIB-BOOK-003' WHERE BookID = 3;
 UPDATE Books SET QRCode = 'SSUET-LIB-BOOK-004' WHERE BookID = 4;
 
-INSERT INTO Students (UniversityID, FullName, FatherName, Email, PasswordHash, Semester, Batch, IsActive)
-VALUES('2024F-BS-0003', 'Usman Tariq', 'Tariq Mehmood','usman@ssuet.edu.pk','Pass@123', 4, '2024F', 0);
-
-
 USE LibraryDB;
 UPDATE Students SET IsActive = 1 WHERE UniversityID = '2024F-BS-0003';
-
-SELECT BookID, Title, QRCode, AvailableCopies FROM Books;
 
 USE LibraryDB;
 ALTER TABLE Students ADD Role VARCHAR(20) NOT NULL DEFAULT 'Student';
 UPDATE Students SET Role = 'Student';
-INSERT INTO Students (UniversityID, FullName, FatherName, Email, PasswordHash, Semester, Batch, IsActive, Role)
-VALUES ('ADMIN-001', 'Library Admin', 'SSUET', 'admin@ssuet.edu.pk', 'Admin@123', 1, '2024F', 1, 'Admin');
-
- Update Students Set PasswordHash = 'Pass@123' where FullName = 'Syeda Ayesha'
- update Students Set Email='Ayeshaallu@ssuet.edu.pk' where Fullname='Syeda Ayesha';
- select*from Students;
- INSERT INTO Students (UniversityID, FullName, FatherName, Email, PasswordHash, Semester, Batch, IsActive)
- VALUES
- ('2024F-BS-0005', 'Yousuf Khan',  'Rizwan', 'Yousuf@ssuet.edu.pk',  '1906', 4, '2024F', 1);
-
 
