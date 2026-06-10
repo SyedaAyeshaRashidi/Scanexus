@@ -4,10 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibrarySystem.Controllers
 {
-    /// <summary>
-    /// QR-Based Digital Library System REST API
-    /// Base URL: /api/library
-    /// </summary>
+  
     [Route("api/[controller]")]
     [ApiController]
     public class LibraryController : ControllerBase
@@ -16,10 +13,6 @@ namespace LibrarySystem.Controllers
 
         public LibraryController(ILibraryService service) => _service = service;
 
-        // ──────────────────────────────────────────────
-        // POST /api/library/login
-        // Body: { "universityID": "2024F-BS-0001", "password": "Pass@123" }
-        // ──────────────────────────────────────────────
         [HttpPost("login")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -48,10 +41,6 @@ namespace LibrarySystem.Controllers
             });
         }
 
-        // ──────────────────────────────────────────────
-        // POST /api/library/issue
-        // Body: { "universityID": "...", "qrCode": "SSUET-LIB-BOOK-..." }
-        // ──────────────────────────────────────────────
         [HttpPost("issue")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
@@ -81,10 +70,6 @@ namespace LibrarySystem.Controllers
             });
         }
 
-        // ──────────────────────────────────────────────
-        // POST /api/library/return
-        // Body: { "txnCode": "TXN-20260524-123456" }
-        // ──────────────────────────────────────────────
         [HttpPost("return")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
@@ -101,10 +86,6 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = message });
         }
 
-        // ──────────────────────────────────────────────
-        // GET /api/library/books
-        // Returns all books with availability
-        // ──────────────────────────────────────────────
         [HttpGet("books")]
         [ProducesResponseType(typeof(ApiResponse<List<object>>), 200)]
         public async Task<IActionResult> GetBooks()
@@ -126,10 +107,6 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
         }
 
-        // ──────────────────────────────────────────────
-        // GET /api/library/dashboard/{universityId}
-        // Returns student dashboard
-        // ──────────────────────────────────────────────
         [HttpGet("dashboard/{universityId}")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 404)]
@@ -171,10 +148,6 @@ namespace LibrarySystem.Controllers
             });
         }
 
-        // ──────────────────────────────────────────────
-        // GET /api/library/scan?qr=SSUET-LIB-BOOK-...
-        // Scans QR and returns book info
-        // ──────────────────────────────────────────────
         [HttpGet("scan")]
         public async Task<IActionResult> ScanQR([FromQuery] string qr)
         {
@@ -202,10 +175,6 @@ namespace LibrarySystem.Controllers
             });
         }
 
-        // ──────────────────────────────────────────────
-        // GET /api/library/transactions
-        // Returns all transactions (admin view)
-        // ──────────────────────────────────────────────
         [HttpGet("transactions")]
         public async Task<IActionResult> GetTransactions()
         {

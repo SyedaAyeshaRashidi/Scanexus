@@ -42,11 +42,9 @@ namespace LibrarySystem.Controllers
             HttpContext.Session.SetString("StudentName", student.FullName);
             HttpContext.Session.SetString("Role", student.Role ?? "Student");
 
-            // Redirect admin to admin panel
             if (student.Role == "Admin")
-                return RedirectToAction("Dashboard", "Admin");
-
-            return RedirectToAction("Dashboard", "Student");
+                TempData["Error"] = "Access denied.";
+            return View();
         }
         public async Task<IActionResult> Dashboard()
         {

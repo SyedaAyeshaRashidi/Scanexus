@@ -379,7 +379,7 @@
                         <th>Issue Date</th>
                         <th>Due Date</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        @* <th>Actions</th> *@
                     </tr>
                 </thead>
                 <tbody>
@@ -418,14 +418,14 @@
                                 }
                             </td>
                             <td>
-                                <form asp-controller="Student" asp-action="Return" method="post" style="margin:0;">
+                                @* <form asp-controller="Student" asp-action="Return" method="post" style="margin:0;">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="txnCode" value="@t.TxnCode" />
                                     <button class="btn-return" type="submit"
                                             onclick="return confirm('Return this book?')">
                                         <i class="bi bi-arrow-return-left me-1"></i>Return
                                     </button>
-                                </form>
+                                </form> *@
                             </td>
                         </tr>
                     }

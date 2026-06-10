@@ -13,19 +13,17 @@ namespace LibrarySystem.Data
 
         protected override void OnModelCreating(ModelBuilder mb)
         {
-            // Student
             mb.Entity<Student>()
               .HasIndex(s => s.UniversityID).IsUnique();
             mb.Entity<Student>()
               .HasIndex(s => s.Email).IsUnique();
 
-            // Book
+            
             mb.Entity<Book>()
               .HasIndex(b => b.ISBN).IsUnique();
             mb.Entity<Book>()
               .HasIndex(b => b.QRCode).IsUnique();
 
-            // Transaction — never deleted
             mb.Entity<Transaction>()
               .HasIndex(t => t.TxnCode).IsUnique();
 
@@ -41,7 +39,6 @@ namespace LibrarySystem.Data
               .HasForeignKey(t => t.BookID)
               .OnDelete(DeleteBehavior.Restrict);
 
-            // Decimal precision
             mb.Entity<Book>()
               .Property(b => b.AvailableCopies)
               .HasDefaultValue(1);

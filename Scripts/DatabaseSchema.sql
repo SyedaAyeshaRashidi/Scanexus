@@ -1,7 +1,6 @@
 USE master;
 GO
 
--- Pehle purana drop karo
 IF EXISTS (SELECT name FROM sys.databases WHERE name = 'LibraryDB')
     DROP DATABASE LibraryDB;
 GO
@@ -12,7 +11,6 @@ GO
 USE LibraryDB;
 GO
 
--- Students Table
 CREATE TABLE Students (
     StudentID    INT PRIMARY KEY IDENTITY(1,1),
     UniversityID VARCHAR(20)  NOT NULL UNIQUE,
@@ -27,7 +25,6 @@ CREATE TABLE Students (
 );
 GO
 
--- Books Table
 CREATE TABLE Books (
     BookID          INT PRIMARY KEY IDENTITY(1,1),
     ISBN            VARCHAR(20)  NOT NULL,
@@ -41,7 +38,6 @@ CREATE TABLE Books (
 );
 GO
 
--- Transactions Table
 CREATE TABLE Transactions (
     TransactionID INT PRIMARY KEY IDENTITY(1,1),
     TxnCode       VARCHAR(50)  NOT NULL UNIQUE,
@@ -55,7 +51,6 @@ CREATE TABLE Transactions (
 );
 GO
 
--- Students Data
 INSERT INTO Students (UniversityID, FullName, FatherName, Email, PasswordHash, Semester, Batch, IsActive)
 VALUES
 ('2024F-BS-0001', 'Ali Hassan',  'Hassan Khan', 'ali@ssuet.edu.pk',  'Pass@123', 4, '2024F', 1),
@@ -63,7 +58,6 @@ VALUES
 ('2024F-BS-0003', 'Usman Tariq', 'Tariq Mehmood','usman@ssuet.edu.pk','Pass@123', 4, '2024F', 0);
 GO
 
--- Books Data
 INSERT INTO Books (ISBN, Title, Author, Publisher, TotalCopies, AvailableCopies, QRCode)
 VALUES
 ('978-0-13-4685', 'Database System Concepts', 'Silberschatz', 'McGraw-Hill', 3, 3, 'BOOK-001'),
@@ -101,3 +95,12 @@ ALTER TABLE Students ADD Role VARCHAR(20) NOT NULL DEFAULT 'Student';
 UPDATE Students SET Role = 'Student';
 INSERT INTO Students (UniversityID, FullName, FatherName, Email, PasswordHash, Semester, Batch, IsActive, Role)
 VALUES ('ADMIN-001', 'Library Admin', 'SSUET', 'admin@ssuet.edu.pk', 'Admin@123', 1, '2024F', 1, 'Admin');
+
+ Update Students Set PasswordHash = 'Pass@123' where FullName = 'Syeda Ayesha'
+ update Students Set Email='Ayeshaallu@ssuet.edu.pk' where Fullname='Syeda Ayesha';
+ select*from Students;
+ INSERT INTO Students (UniversityID, FullName, FatherName, Email, PasswordHash, Semester, Batch, IsActive)
+ VALUES
+ ('2024F-BS-0005', 'Yousuf Khan',  'Rizwan', 'Yousuf@ssuet.edu.pk',  '1906', 4, '2024F', 1);
+
+
