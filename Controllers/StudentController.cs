@@ -24,6 +24,19 @@ namespace LibrarySystem.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
+            // Pehle Admin table check karo
+            var admin = await _db.Admins.FirstOrDefaultAsync(
+                a => a.AdminID == model.UniversityID && a.PasswordHash == model.Password);
+
+            if (admin != null)
+            {
+                HttpContext.Session.SetString("UniversityID", admin.AdminID);
+                HttpContext.Session.SetString("StudentName", "Library Admin");
+                HttpContext.Session.SetString("Role", "Admin");
+                return RedirectToAction("Dashboard", "Admin");
+            }
+
+            // Phir Students table check karo
             var student = await _db.Students.FirstOrDefaultAsync(
                 s => s.UniversityID == model.UniversityID && s.PasswordHash == model.Password);
 
@@ -32,6 +45,7 @@ namespace LibrarySystem.Controllers
                 TempData["Error"] = "Invalid University ID or password.";
                 return View(model);
             }
+
             if (!student.IsActive)
             {
                 TempData["Error"] = "Your account is inactive. Contact the library.";
@@ -40,11 +54,9 @@ namespace LibrarySystem.Controllers
 
             HttpContext.Session.SetString("UniversityID", student.UniversityID);
             HttpContext.Session.SetString("StudentName", student.FullName);
-            HttpContext.Session.SetString("Role", student.Role ?? "Student");
+            HttpContext.Session.SetString("Role", "Student");
 
-            if (student.Role == "Admin")
-                TempData["Error"] = "Access denied.";
-            return View();
+            return RedirectToAction("Dashboard");
         }
         public async Task<IActionResult> Dashboard()
         {

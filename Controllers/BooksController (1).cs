@@ -63,5 +63,40 @@ namespace LibrarySystem.Controllers
 
             return RedirectToAction("Index");
         }
+        // GET: /Books/Detail?qr=SSUET-LIB-BOOK-001
+        [HttpGet]
+        public async Task<IActionResult> Detail(string qr)
+        {
+            var uid = HttpContext.Session.GetString("UniversityID") ?? "";
+            var (book, activeTxn) = await _service.GetBookWithTxnAsync(qr, uid);
+
+            if (book == null) return NotFound();
+
+            return Json(new
+            {
+                available = book.AvailableCopies > 0,
+                hasActiveTxn = activeTxn != null,
+                borrowQR = book.QRCode,
+                returnQR = activeTxn != null ? "RETURN-" + activeTxn.TxnCode : null,
+                dueDate = activeTxn != null ? activeTxn.DueDate.ToString("dd MMM yyyy") : null
+            });
+        }
+
+        // POST: /Books/ReturnByQR
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReturnByQR(string returnQrCode)
+        {
+            var uid = HttpContext.Session.GetString("UniversityID") ?? "";
+            if (string.IsNullOrEmpty(uid))
+            {
+                TempData["Error"] = "Please login first.";
+                return RedirectToAction("Index");
+            }
+
+            var (success, message) = await _service.ReturnBookByQRAsync(returnQrCode, uid);
+            TempData[success ? "Success" : "Error"] = message;
+            return RedirectToAction("Index");
+        }
     }
 }

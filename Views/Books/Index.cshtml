@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Library Catalog";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var uid = Context.Session.GetString("UniversityID") ?? "";
 }
 
 @section Styles {
@@ -36,7 +37,6 @@
             font-weight: 500;
         }
 
-        /* Modernized Back to Dashboard Action Button Control */
         .btn-back-dashboard {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -58,19 +58,19 @@
                 color: #fff;
             }
 
-        /* Modernized Book Grid Cards */
         .book-card {
             background: rgba(11, 11, 30, 0.6);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 16px;
-            padding: 1.5rem 1.3rem;
+            padding: 1.6rem 1.4rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100%;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            cursor: pointer;
         }
 
             .book-card:hover {
@@ -79,46 +79,22 @@
                 box-shadow: 0 12px 30px rgba(37, 99, 235, 0.15);
             }
 
-        .qr-wrap {
-            position: relative;
-            margin-bottom: 1.2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            border-radius: 12px;
-            overflow: hidden;
+        .book-icon-wrap {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
         }
 
-            .qr-wrap img {
-                width: 155px;
-                height: 155px;
-                border-radius: 12px;
-                background: #fff;
-                padding: 8px;
-                display: block;
-                transition: all 0.3s;
+            .book-icon-wrap i {
+                font-size: 1.8rem;
+                color: #60a5fa;
             }
-
-        .qr-unavailable {
-            opacity: 0.15;
-            filter: grayscale(1) blur(1px);
-        }
-
-        .unavailable-badge {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(220, 38, 38, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            backdrop-filter: blur(4px);
-            color: #fca5a5;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            padding: 6px 14px;
-            border-radius: 8px;
-            white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
-        }
 
         .book-title {
             font-size: 1rem;
@@ -137,15 +113,6 @@
             font-weight: 500;
         }
 
-        .book-qr {
-            font-size: 0.75rem;
-            color: #475569;
-            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-            margin-bottom: 12px;
-            font-weight: 500;
-        }
-
-        /* Books Copies Neon Indicators */
         .copies-wrap {
             display: flex;
             gap: 5px;
@@ -156,7 +123,6 @@
 
             .copies-wrap i {
                 font-size: 0.95rem;
-                transition: transform 0.2s;
             }
 
         .copy-avail {
@@ -171,54 +137,99 @@
         .copies-label {
             font-size: 0.75rem;
             color: #64748b;
-            margin-bottom: 1.2rem;
+            margin-bottom: 0.6rem;
             font-weight: 500;
         }
 
-        /* Action Buttons */
-        .btn-borrow-book {
-            background: linear-gradient(135deg, #2563eb, #4f46e5);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-            border: none;
-            color: #fff;
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 0.65rem 1.2rem;
-            border-radius: 10px;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
+        .status-pill {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 4px 12px;
+            border-radius: 20px;
             margin-top: auto;
         }
 
-            .btn-borrow-book:hover {
-                transform: scale(0.98);
-                opacity: 0.95;
-                box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+        .status-available {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            color: #4ade80;
+        }
+
+        .status-unavailable {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+        }
+
+        .detail-modal-content {
+            background: rgba(11, 11, 30, 0.95) !important;
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 20px !important;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+            .detail-modal-content .modal-header {
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                padding: 1.2rem 1.5rem;
             }
 
-        .btn-unavailable {
-            background: rgba(148, 163, 184, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            color: #475569;
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 0.65rem 1.2rem;
-            border-radius: 10px;
-            width: 100%;
-            cursor: not-allowed;
-            margin-top: auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+        .detail-book-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f1f5f9;
         }
 
-        /* Premium Modular Dynamic Receipt */
+        .detail-book-author {
+            font-size: 0.85rem;
+            color: #60a5fa;
+            margin-bottom: 1rem;
+        }
+
+        .qr-action-card {
+            background: rgba(5, 5, 15, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 1.2rem;
+            text-align: center;
+            height: 100%;
+        }
+
+            .qr-action-card img {
+                width: 140px;
+                height: 140px;
+                background: #fff;
+                border-radius: 10px;
+                padding: 6px;
+                margin-bottom: 0.8rem;
+            }
+
+        .qr-action-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 4px;
+        }
+
+        .qr-action-sub {
+            font-size: 0.72rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .qr-locked {
+            padding: 2.5rem 1rem;
+            color: #475569;
+            font-size: 0.82rem;
+        }
+
+            .qr-locked i {
+                font-size: 2rem;
+                display: block;
+                margin-bottom: 0.6rem;
+            }
+
         .receipt-modal-bg {
             position: fixed;
             inset: 0;
@@ -340,7 +351,6 @@
                 scale: 0.99;
             }
 
-        /* Camera Scanner Modular Layout Customizations */
         .scanner-modal-content {
             background: rgba(11, 11, 30, 0.95) !important;
             backdrop-filter: blur(16px);
@@ -374,7 +384,6 @@
     </style>
 }
 
-@* Receipt Modal Output Box *@
 @if (TempData["Receipt"] != null)
 {
     var receipt = System.Text.Json.JsonDocument.Parse(TempData["Receipt"]!.ToString()!).RootElement;
@@ -410,18 +419,62 @@
     </div>
 }
 
-@* Video Capture QR Scanner Camera Modal Container *@
+@if (TempData["Success"] != null && TempData["Success"]!.ToString()!.Contains("return", StringComparison.OrdinalIgnoreCase))
+{
+    var msg = TempData["Success"]!.ToString();
+    <div class="receipt-modal-bg" id="returnReceiptModal">
+        <div class="receipt-box">
+            <i class="bi bi-check-circle-fill big" style="color:#3b82f6;"></i>
+            <div class="receipt-title">Book Returned!</div>
+            <div class="receipt-sub">@msg</div>
+            <button class="btn-done" onclick="document.getElementById('returnReceiptModal').remove()">Done</button>
+        </div>
+    </div>
+}
+
+<div class="modal fade" id="bookDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content detail-modal-content border-0">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="detail-book-title mb-0" id="detailBookTitle">—</h5>
+                    <div class="detail-book-author" id="detailBookAuthor">—</div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="qr-action-card" id="borrowQrCard">
+                            <div class="qr-locked">
+                                <i class="bi bi-hourglass-split"></i>Loading...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="qr-action-card" id="returnQrCard">
+                            <div class="qr-locked">
+                                <i class="bi bi-hourglass-split"></i>Loading...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="scannerModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content scanner-modal-content border-0">
             <div class="modal-header border-0 pb-0">
                 <h5 class="text-white fw-bold mb-0">
-                    <i class="bi bi-qr-code-scan me-2" style="color:#3b82f6;"></i>Scan Item Identity
+                    <i class="bi bi-qr-code-scan me-2" style="color:#3b82f6;"></i><span id="scannerTitle">Scan Item Identity</span>
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopScanner()"></button>
             </div>
             <div class="modal-body p-4">
-                <p class="text-center mb-3" style="font-size:0.85rem; color:#64748b; font-weight: 500;">Position the catalog sticker code within the target container bounds</p>
+                <p class="text-center mb-3" style="font-size:0.85rem; color:#64748b; font-weight: 500;">Position the QR code within the target container bounds</p>
                 <div id="reader" style="width:100%; border-radius:12px; overflow:hidden; border: 1px solid rgba(255,255,255,0.05);"></div>
                 <p id="scanStatus" class="text-center mt-3 mb-0"></p>
             </div>
@@ -434,11 +487,15 @@
     <input type="hidden" id="qrInput" name="qrCode" />
 </form>
 
-@* Workspace Heading Content Header with Return Controller Action *@
+<form id="returnForm" asp-controller="Books" asp-action="ReturnByQR" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="returnQrInput" name="returnQrCode" />
+</form>
+
 <div class="page-header">
     <div>
         <div class="page-title"><i class="bi bi-grid-3x3-gap-fill me-2" style="color:#3b82f6;"></i>Available Library Catalog</div>
-        <div class="page-sub">@Model.Count items listed — scan any barcode token sheet to initiate automatic reservation</div>
+        <div class="page-sub">@Model.Count items listed — click any book to borrow or return</div>
     </div>
     <a href="/Student/Dashboard" class="btn-back-dashboard">
         <i class="bi bi-arrow-left"></i> Back to Dashboard
@@ -450,25 +507,21 @@
     <div class="alert-e"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]</div>
 }
 
-@* Dynamic Inventory Responsive Grid Core System *@
 <div class="row g-4">
     @foreach (var book in Model)
     {
         bool available = book.AvailableCopies > 0;
         <div class="col-sm-6 col-md-4 col-lg-3">
-            <div class="book-card">
-                <div class="qr-wrap">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=@Uri.EscapeDataString(book.QRCode)&ecc=H&margin=10"
-                         alt="QR" class="@(!available ? "qr-unavailable" : "")" />
-                    @if (!available)
-                    {
-                        <div class="unavailable-badge">OUT OF STOCK</div>
-                    }
+            <div class="book-card"
+                 data-qr="@book.QRCode"
+                 data-title="@book.Title"
+                 data-author="@book.Author">
+                <div class="book-icon-wrap">
+                    <i class="bi bi-book-fill"></i>
                 </div>
 
                 <div class="book-title">@book.Title</div>
                 <div class="book-author">@book.Author</div>
-                <div class="book-qr">@book.QRCode</div>
 
                 <div class="copies-wrap">
                     @for (int i = 1; i <= book.TotalCopies; i++)
@@ -480,15 +533,11 @@
 
                 @if (available)
                 {
-                    <button class="btn-borrow-book" onclick="startScannerForBook('@book.QRCode')">
-                        <i class="bi bi-qr-code-scan"></i> Scan to Borrow
-                    </button>
+                    <span class="status-pill status-available">AVAILABLE</span>
                 }
                 else
                 {
-                    <button class="btn-unavailable" disabled>
-                        <i class="bi bi-x-circle-fill"></i> Out of Stock
-                    </button>
+                    <span class="status-pill status-unavailable">OUT OF STOCK</span>
                 }
             </div>
         </div>
@@ -500,11 +549,81 @@
     <script>
         var scanner = null;
         var expectedQR = null;
+        var scanMode = null;
 
-        function startScannerForBook(qrCode) {
+        document.querySelectorAll('.book-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                var qr = card.getAttribute('data-qr');
+                var title = card.getAttribute('data-title');
+                var author = card.getAttribute('data-author');
+                openBookDetail(qr, title, author);
+            });
+        });
+
+        function openBookDetail(qrCode, title, author) {
+            document.getElementById('detailBookTitle').innerText = title;
+            document.getElementById('detailBookAuthor').innerText = author;
+
+            document.getElementById('borrowQrCard').innerHTML = '<div class="qr-locked"><i class="bi bi-hourglass-split"></i>Loading...</div>';
+            document.getElementById('returnQrCard').innerHTML = '<div class="qr-locked"><i class="bi bi-hourglass-split"></i>Loading...</div>';
+
+            var modal = new bootstrap.Modal(document.getElementById('bookDetailModal'));
+            modal.show();
+
+            fetch('/Books/Detail?qr=' + encodeURIComponent(qrCode))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.available && !data.hasActiveTxn) {
+                        document.getElementById('borrowQrCard').innerHTML =
+                            '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.borrowQR) + '&ecc=H&margin=10" />' +
+                            '<div class="qr-action-title" style="color:#4ade80;">Borrow This Book</div>' +
+                            '<div class="qr-action-sub">Scan to issue this copy to you</div>' +
+                            '<button class="btn-done" style="background:linear-gradient(135deg,#2563eb,#4f46e5);" data-scan-qr="' + data.borrowQR + '" data-scan-mode="borrow">' +
+                            '<i class="bi bi-qr-code-scan me-2"></i>Scan to Borrow</button>';
+                    } else if (data.hasActiveTxn) {
+                        document.getElementById('borrowQrCard').innerHTML =
+                            '<div class="qr-locked"><i class="bi bi-lock-fill"></i>You already have this book issued</div>';
+                    } else {
+                        document.getElementById('borrowQrCard').innerHTML =
+                            '<div class="qr-locked"><i class="bi bi-x-circle"></i>All copies currently issued</div>';
+                    }
+
+                    if (data.hasActiveTxn) {
+                        document.getElementById('returnQrCard').innerHTML =
+                            '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.returnQR) + '&ecc=H&margin=10" />' +
+                            '<div class="qr-action-title" style="color:#facc15;">Return This Book</div>' +
+                            '<div class="qr-action-sub">Due: ' + data.dueDate + '</div>' +
+                            '<button class="btn-done" style="background:linear-gradient(135deg,#f59e0b,#ea580c);" data-scan-qr="' + data.returnQR + '" data-scan-mode="return">' +
+                            '<i class="bi bi-qr-code-scan me-2"></i>Scan to Return</button>';
+                    } else {
+                        document.getElementById('returnQrCard').innerHTML =
+                            '<div class="qr-locked"><i class="bi bi-lock-fill"></i>You have not borrowed this book</div>';
+                    }
+
+                    // Attach click handlers to newly created scan buttons
+                    document.querySelectorAll('[data-scan-qr]').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            startScannerForBook(btn.getAttribute('data-scan-qr'), btn.getAttribute('data-scan-mode'));
+                        });
+                    });
+                })
+                .catch(function () {
+                    document.getElementById('borrowQrCard').innerHTML = '<div class="qr-locked"><i class="bi bi-exclamation-triangle"></i>Failed to load</div>';
+                    document.getElementById('returnQrCard').innerHTML = '<div class="qr-locked"><i class="bi bi-exclamation-triangle"></i>Failed to load</div>';
+                });
+        }
+
+        function startScannerForBook(qrCode, mode) {
             expectedQR = qrCode;
+            scanMode = mode;
+            document.getElementById('scannerTitle').innerText = mode === 'borrow' ? 'Scan to Borrow' : 'Scan to Return';
             document.getElementById('scanStatus').className = "text-center mt-3 mb-0";
             document.getElementById('scanStatus').innerText = 'Initializing camera engine...';
+
+            var detailModalEl = document.getElementById('bookDetailModal');
+            var detailModal = bootstrap.Modal.getInstance(detailModalEl);
+            if (detailModal) detailModal.hide();
+
             var modal = new bootstrap.Modal(document.getElementById('scannerModal'));
             modal.show();
 
@@ -515,13 +634,18 @@
                     { fps: 12, qrbox: { width: 240, height: 240 } },
                     function (decodedText) {
                         if (decodedText === expectedQR) {
-                            document.getElementById('scanStatus').innerText = '✅ Verification match success! Registering checkout...';
+                            document.getElementById('scanStatus').innerText = 'Verification match success! Processing...';
                             scanner.stop().then(function () {
-                                document.getElementById('qrInput').value = decodedText;
-                                document.getElementById('qrForm').submit();
+                                if (scanMode === 'borrow') {
+                                    document.getElementById('qrInput').value = decodedText;
+                                    document.getElementById('qrForm').submit();
+                                } else {
+                                    document.getElementById('returnQrInput').value = decodedText;
+                                    document.getElementById('returnForm').submit();
+                                }
                             });
                         } else {
-                            document.getElementById('scanStatus').innerText = '❌ Token validation mismatch. Try again.';
+                            document.getElementById('scanStatus').innerText = 'Token validation mismatch. Try again.';
                         }
                     },
                     function (error) {}

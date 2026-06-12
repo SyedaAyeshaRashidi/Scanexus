@@ -11,6 +11,7 @@ namespace LibrarySystem.Data
         public DbSet<Book>        Books        { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
 
+        public DbSet<Admin> Admins { get; set; }
         protected override void OnModelCreating(ModelBuilder mb)
         {
             mb.Entity<Student>()

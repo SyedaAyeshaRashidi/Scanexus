@@ -25,7 +25,7 @@ namespace LibrarySystem.Controllers
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
 
             ViewBag.TotalBooks = await _db.Books.CountAsync();
-            ViewBag.TotalStudents = await _db.Students.Where(s => s.Role == "Student").CountAsync();
+            ViewBag.TotalStudents = await _db.Students.CountAsync();
             ViewBag.ActiveIssues = await _db.Transactions.CountAsync(t => t.Status == "Active");
             ViewBag.OverdueIssues = await _db.Transactions.CountAsync(t => t.Status == "Overdue");
             ViewBag.TotalTransactions = await _db.Transactions.CountAsync();
@@ -138,7 +138,6 @@ namespace LibrarySystem.Controllers
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
             var students = await _db.Students
-                .Where(s => s.Role == "Student")
                 .OrderBy(s => s.FullName)
                 .ToListAsync();
             return View("AdminStudents", students);
@@ -167,9 +166,6 @@ namespace LibrarySystem.Controllers
                 return View("AdminAddStudent", student);
             }
 
-            // Password hashing — agar service mein hash hota hai toh woh use karo
-            // Warna plain text store karo same jaise login karta hai
-            student.Role = "Student";
             student.IsActive = true;
             student.CreatedAt = DateTime.Now;
 

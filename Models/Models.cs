@@ -37,11 +37,23 @@ namespace LibrarySystem.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         [StringLength(20)]
-        public string Role { get; set; } = "Student"; 
+        //public string Role { get; set; } = "Student"; 
 
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 
+    public class Admin
+    {
+        [Key]
+        [StringLength(20)]
+        public string AdminID { get; set; } = string.Empty;
+
+        [Required, StringLength(256)]
+        public string PasswordHash { get; set; } = string.Empty;
+
+        [StringLength(100)]
+        public string? Email { get; set; }
+    }
     public class Book
     {
         [Key]
@@ -74,35 +86,37 @@ namespace LibrarySystem.Models
     {
         [Key]
         public int TransactionID { get; set; }
-
         [Required, StringLength(50)]
         public string TxnCode { get; set; } = string.Empty;
-
         [ForeignKey("Student")]
         public int StudentID { get; set; }
         public Student? Student { get; set; }
-
         [ForeignKey("Book")]
         public int BookID { get; set; }
         public Book? Book { get; set; }
-
         public DateTime IssueDate { get; set; } = DateTime.Now;
         public DateTime DueDate { get; set; }
         public DateTime? ReturnDate { get; set; }
-
         [StringLength(20)]
         public string Status { get; set; } = "Active";
-
         [Required, StringLength(500)]
         public string QRScanData { get; set; } = string.Empty;
-
         [StringLength(300)]
         public string? Remarks { get; set; }
-
         [NotMapped]
         public bool IsOverdue => Status == "Active" && DueDate < DateTime.Now;
-    }
 
+        public decimal FineAmount { get; set; } = 0;
+        public bool FinePaid { get; set; } = false;
+
+        [NotMapped]
+        public int OverdueDays => Status == "Active" && DueDate < DateTime.Now
+            ? (DateTime.Now - DueDate).Days
+            : 0;
+
+        [NotMapped]
+        public decimal CalculatedFine => OverdueDays * 20;
+    }
     public class LoginViewModel
     {
         [Required(ErrorMessage = "University ID is required")]

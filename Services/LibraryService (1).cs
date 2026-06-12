@@ -11,6 +11,8 @@ namespace LibrarySystem.Services
         Task<(bool Success, string Message, Student? Student)> AuthenticateAsync(string universityId, string password);
         Task<(bool Success, string Message, Transaction? Txn)> IssueBookAsync(string universityId, string qrCode);
         Task<(bool Success, string Message)> ReturnBookAsync(string txnCode);
+        Task<(bool Success, string Message)> ReturnBookByQRAsync(string returnQrCode, string universityId);
+        Task<(Book? Book, Transaction? ActiveTxn)> GetBookWithTxnAsync(string qrCode, string universityId);
         Task<DashboardViewModel?> GetDashboardAsync(string universityId);
         Task<List<Book>> GetAllBooksAsync();
         Task<Book?> GetBookByQRAsync(string qrCode);
@@ -60,8 +62,8 @@ namespace LibrarySystem.Services
             // 3. Already issued to this student?
             var alreadyIssued = await _db.Transactions
                 .AnyAsync(t => t.StudentID == student.StudentID
-                            && t.BookID   == book.BookID
-                            && t.Status   == "Active");
+                            && t.BookID == book.BookID
+                            && t.Status == "Active");
             if (alreadyIssued) return (false, "You already have this book issued.", null);
 
             // 4. Availability check
@@ -80,12 +82,12 @@ namespace LibrarySystem.Services
             {
                 var newTxn = new Transaction
                 {
-                    TxnCode    = GenerateTxnCode(),
-                    StudentID  = student.StudentID,
-                    BookID     = book.BookID,
-                    IssueDate  = DateTime.Now,
-                    DueDate    = DateTime.Now.AddDays(14),
-                    Status     = "Active",
+                    TxnCode = GenerateTxnCode(),
+                    StudentID = student.StudentID,
+                    BookID = book.BookID,
+                    IssueDate = DateTime.Now,
+                    DueDate = DateTime.Now.AddDays(14),
+                    Status = "Active",
                     QRScanData = qrCode
                 };
 
@@ -97,7 +99,7 @@ namespace LibrarySystem.Services
 
                 // Load navigation props for response
                 newTxn.Student = student;
-                newTxn.Book    = book;
+                newTxn.Book = book;
 
                 return (true, "Book issued successfully! Due in 14 days.", newTxn);
             }
@@ -109,7 +111,7 @@ namespace LibrarySystem.Services
         }
 
         // ──────────────────────────────────────────────
-        // Return Book
+        // Return Book (by TxnCode — used by Admin/manual return)
         // ──────────────────────────────────────────────
         public async Task<(bool, string)> ReturnBookAsync(string txnCode)
         {
@@ -121,11 +123,83 @@ namespace LibrarySystem.Services
             if (txn.Status == "Returned") return (false, "Book already returned.");
 
             txn.ReturnDate = DateTime.Now;
-            txn.Status     = "Returned";
-            txn.Book!.AvailableCopies++;
 
+            // Fine calculate karo agar overdue hai
+            if (txn.DueDate < DateTime.Now)
+            {
+                int overdueDays = (DateTime.Now - txn.DueDate).Days;
+                txn.FineAmount = overdueDays * 20; // Rs. 20 per day
+                txn.Status = "Returned";
+                txn.Book!.AvailableCopies++;
+                await _db.SaveChangesAsync();
+
+                return (true, $"Book returned successfully. Overdue by {overdueDays} day(s) — Fine: Rs. {txn.FineAmount}");
+            }
+
+            txn.Status = "Returned";
+            txn.Book!.AvailableCopies++;
+            await _db.SaveChangesAsync();
+
+            return (true, "Book returned successfully.");
+        }
+
+        // ──────────────────────────────────────────────
+        // Return Book by QR (Return QR = "RETURN-" + TxnCode)
+        // ──────────────────────────────────────────────
+        public async Task<(bool, string)> ReturnBookByQRAsync(string returnQrCode, string universityId)
+        {
+            if (string.IsNullOrEmpty(returnQrCode) || !returnQrCode.StartsWith("RETURN-"))
+                return (false, "Invalid return QR code.");
+
+            var txnCode = returnQrCode.Substring("RETURN-".Length);
+
+            var txn = await _db.Transactions
+                .Include(t => t.Book)
+                .Include(t => t.Student)
+                .FirstOrDefaultAsync(t => t.TxnCode == txnCode);
+
+            if (txn == null) return (false, "Transaction not found.");
+            if (txn.Status == "Returned") return (false, "Book already returned.");
+            if (txn.Student!.UniversityID != universityId) return (false, "This isn't your book to return.");
+
+            txn.ReturnDate = DateTime.Now;
+
+            if (txn.DueDate < DateTime.Now)
+            {
+                int overdueDays = (DateTime.Now - txn.DueDate).Days;
+                txn.FineAmount = overdueDays * 20;
+                txn.Status = "Returned";
+                txn.Book!.AvailableCopies++;
+                await _db.SaveChangesAsync();
+                return (true, $"Book returned! Overdue by {overdueDays} day(s) — Fine: Rs. {txn.FineAmount}");
+            }
+
+            txn.Status = "Returned";
+            txn.Book!.AvailableCopies++;
             await _db.SaveChangesAsync();
             return (true, "Book returned successfully.");
+        }
+
+        // ──────────────────────────────────────────────
+        // Get Book + Student's Active Transaction (for borrow/return modal)
+        // ──────────────────────────────────────────────
+        public async Task<(Book? Book, Transaction? ActiveTxn)> GetBookWithTxnAsync(string qrCode, string universityId)
+        {
+            var book = await _db.Books.FirstOrDefaultAsync(b => b.QRCode == qrCode);
+            if (book == null) return (null, null);
+
+            if (string.IsNullOrEmpty(universityId))
+                return (book, null);
+
+            var student = await _db.Students.FirstOrDefaultAsync(s => s.UniversityID == universityId);
+            if (student == null) return (book, null);
+
+            var activeTxn = await _db.Transactions
+                .FirstOrDefaultAsync(t => t.BookID == book.BookID
+                                        && t.StudentID == student.StudentID
+                                        && (t.Status == "Active" || t.Status == "Overdue"));
+
+            return (book, activeTxn);
         }
 
         // ──────────────────────────────────────────────
@@ -149,9 +223,9 @@ namespace LibrarySystem.Services
 
             return new DashboardViewModel
             {
-                Student     = student,
+                Student = student,
                 ActiveBooks = allTxns.Where(t => t.Status is "Active" or "Overdue").ToList(),
-                History     = allTxns.Where(t => t.Status == "Returned").ToList()
+                History = allTxns.Where(t => t.Status == "Returned").ToList()
             };
         }
 
@@ -173,9 +247,6 @@ namespace LibrarySystem.Services
         // ──────────────────────────────────────────────
         public Task<string> GenerateQRCodeBase64Async(string content)
         {
-            // Using QRCoder library
-            // In production this would use QRCodeGenerator from QRCoder package
-            // Returning placeholder base64 for structure; wire up QRCoder NuGet
             var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes($"QR:{content}"));
             return Task.FromResult(base64);
         }
@@ -193,7 +264,7 @@ namespace LibrarySystem.Services
         private static string GenerateTxnCode()
         {
             var datePart = DateTime.Now.ToString("yyyyMMdd");
-            var rand     = new Random().Next(100000, 999999);
+            var rand = new Random().Next(100000, 999999);
             return $"TXN-{datePart}-{rand}";
         }
     }
