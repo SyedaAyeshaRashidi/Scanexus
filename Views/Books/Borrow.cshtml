@@ -17,7 +17,6 @@
             margin-top: 3rem;
         }
 
-        /* Premium Glassmorphism Card Wrapper */
         .borrow-card {
             background: rgba(11, 11, 30, 0.7);
             backdrop-filter: blur(12px);
@@ -54,7 +53,6 @@
             font-weight: 500;
         }
 
-        /* Translucent Matrix Info Box */
         .info-box {
             background: rgba(5, 5, 15, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -92,7 +90,6 @@
                     font-size: 0.85rem;
                 }
 
-        /* Fluid Premium Buttons */
         .btn-confirm {
             background: linear-gradient(135deg, #2563eb, #4f46e5);
             box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
@@ -139,7 +136,6 @@
                 color: #fff;
             }
 
-        /* Conditional States UI System */
         .state-icon {
             font-size: 3.2rem;
             display: block;
@@ -171,7 +167,6 @@
     <div class="borrow-card">
         @if (!available)
         {
-            <!-- Dynamic State View: Book Out of Stock -->
             <i class="bi bi-x-circle-fill state-icon" style="color:#ef4444; text-shadow: 0 4px 15px rgba(239,68,68,0.25);"></i>
             <div class="state-title">Book Unavailable</div>
             <div class="state-sub">All copies of <strong style="color:#f1f5f9; font-weight: 600;">@bookTitle</strong> are currently checked out.</div>
@@ -179,7 +174,6 @@
         }
         else if (string.IsNullOrEmpty(uid))
         {
-            <!-- Dynamic State View: Intercept Guard Identity Check -->
             <i class="bi bi-person-lock state-icon" style="color:#facc15; text-shadow: 0 4px 15px rgba(250,204,21,0.25);"></i>
             <div class="state-title">Login Required</div>
             <div class="state-sub">Please log in to your account to process this request.</div>
@@ -189,7 +183,6 @@
         }
         else
         {
-            <!-- Dynamic State View: Checkout Confirmation Form -->
             <i class="bi bi-book-half borrow-icon" style="color:#3b82f6;"></i>
             <div class="borrow-title">@bookTitle</div>
             <div class="borrow-author">@bookAuthor</div>

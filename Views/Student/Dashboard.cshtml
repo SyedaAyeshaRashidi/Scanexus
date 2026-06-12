@@ -6,7 +6,6 @@
 
 @section Styles {
     <style>
-        /* Modern Premium Welcome Card */
         .welcome-bar {
             background: rgba(11, 11, 30, 0.6);
             backdrop-filter: blur(12px);
@@ -41,7 +40,6 @@
                 font-weight: 600;
             }
 
-        /* Action Buttons */
         .btn-borrow {
             background: linear-gradient(135deg, #2563eb, #4f46e5);
             box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
@@ -66,7 +64,6 @@
                 opacity: 0.95;
             }
 
-        /* Fluid Grid Stat Cards */
         .stat-card {
             background: rgba(11, 11, 30, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -113,7 +110,6 @@
             font-weight: 600;
         }
 
-        /* Content Sections */
         .section-card {
             background: rgba(11, 11, 30, 0.6);
             backdrop-filter: blur(10px);
@@ -142,7 +138,6 @@
                 font-size: 18px;
             }
 
-        /* Clean Matrix Table Style */
         .table {
             margin: 0;
             color: #cbd5e1;
@@ -190,7 +185,6 @@
             font-weight: 500;
         }
 
-        /* Soft Glow Neon Status Badges */
         .badge-active {
             background: rgba(34, 197, 94, 0.1);
             color: #86efac;
@@ -213,7 +207,6 @@
             display: inline-block;
         }
 
-        /* Action Controls Buttons */
         .btn-return {
             background: rgba(239, 68, 68, 0.06);
             border: 1px solid rgba(239, 68, 68, 0.2);
@@ -233,7 +226,6 @@
                 transform: scale(0.98);
             }
 
-        /* Styled Empty States Grid */
         .empty-state {
             text-align: center;
             padding: 4rem 1.5rem;
@@ -257,7 +249,6 @@
                     text-decoration: underline;
                 }
 
-        /* Uniform Custom System Notification Alerts */
         .alert-s {
             background: rgba(34, 197, 94, 0.1);
             border: 1px solid rgba(34, 197, 94, 0.2);
@@ -294,7 +285,6 @@
     </style>
 }
 
-<!-- Welcome Bar Header Profile -->
 <div class="welcome-bar">
     <div>
         <div class="welcome-name">@Model.Student.FullName</div>
@@ -309,7 +299,6 @@
     </a>
 </div>
 
-<!-- Context Message Box Stream -->
 @if (TempData["Success"] != null)
 {
     <div class="alert-s"><i class="bi bi-check-circle-fill"></i>@TempData["Success"]</div>
@@ -319,7 +308,6 @@
     <div class="alert-e"><i class="bi bi-exclamation-triangle-fill"></i>@TempData["Error"]</div>
 }
 
-<!-- Quantitative Analytics Cards -->
 <div class="row g-4 mb-4">
     <div class="col-md-4">
         <div class="stat-card">
@@ -356,7 +344,6 @@
     </div>
 </div>
 
-<!-- Inventory Operations Stream Table -->
 <div class="section-card">
     <div class="section-header">
         <i class="bi bi-journal-check"></i> Currently Borrowed Books
@@ -379,7 +366,7 @@
                         <th>Issue Date</th>
                         <th>Due Date</th>
                         <th>Status</th>
-                        @* <th>Actions</th> *@
+                        @* <th>Actions</th>  *@
                     </tr>
                 </thead>
                 <tbody>
@@ -418,14 +405,14 @@
                                 }
                             </td>
                             <td>
-                                @* <form asp-controller="Student" asp-action="Return" method="post" style="margin:0;">
+                                @*  <form asp-controller="Student" asp-action="Return" method="post" style="margin:0;">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="txnCode" value="@t.TxnCode" />
                                     <button class="btn-return" type="submit"
                                             onclick="return confirm('Return this book?')">
                                         <i class="bi bi-arrow-return-left me-1"></i>Return
                                     </button>
-                                </form> *@
+                                </form>  *@
                             </td>
                         </tr>
                     }

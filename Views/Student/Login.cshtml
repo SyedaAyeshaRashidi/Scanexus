@@ -29,7 +29,6 @@
             overflow: hidden;
         }
 
-            /* Subtle Background Glows */
             body::before {
                 content: '';
                 position: absolute;
@@ -54,7 +53,6 @@
                 pointer-events: none;
             }
 
-        /* Premium Modern Card Container */
         .login-card {
             background: rgba(11, 11, 30, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -68,7 +66,6 @@
             z-index: 1;
         }
 
-        /* Logo Hexagon */
         .icon-hex {
             position: relative;
             width: 68px;
@@ -98,7 +95,6 @@
                 text-shadow: 0 2px 10px rgba(0,0,0,0.3);
             }
 
-        /* Prominent Brand Section */
         .brand-block {
             text-align: center;
             margin-bottom: 2rem;
@@ -123,12 +119,11 @@
             font-weight: 600;
             letter-spacing: 2px;
             text-transform: uppercase;
-            color: #94a3b8; /* Rich prominent text color */
+            color: #94a3b8; 
             opacity: 0.9;
             margin: 0;
         }
 
-        /* Divider Line */
         .sep {
             display: flex;
             align-items: center;
@@ -150,7 +145,6 @@
             font-weight: 600;
         }
 
-        /* Form Inputs */
         .field-label {
             font-size: 0.75rem;
             color: #94a3b8;
@@ -207,7 +201,6 @@
                     color: #334155;
                 }
 
-        /* Eye Toggle Button */
         .eye-btn {
             background: none;
             border: none;
@@ -229,7 +222,6 @@
                 font-size: 18px;
             }
 
-        /* Modernized Login Button */
         .btn-login {
             width: 100%;
             padding: 0.85rem;
@@ -259,7 +251,6 @@
                 transform: translateY(1px);
             }
 
-        /* Alert styling */
         .alert-danger {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.2);
@@ -272,7 +263,6 @@
             align-items: center;
         }
 
-        /* Autofill Fix for Dark Mode */
         .input-wrap input:-webkit-autofill,
         .input-wrap input:-webkit-autofill:hover,
         .input-wrap input:-webkit-autofill:focus {
@@ -291,7 +281,6 @@
 <body>
     <div class="login-card">
 
-        <!-- Hexagon Brand Logo -->
         <div class="icon-hex">
             <div class="hex-bg"></div>
             <div class="hex-inner">
@@ -299,7 +288,6 @@
             </div>
         </div>
 
-        <!-- Prominent Title & Slogan -->
         <div class="brand-block">
             <h1>Scan<span class="brand-name-blue">exus</span></h1>
             <p>Scan &bull; Borrow &bull; Read</p>
@@ -321,7 +309,6 @@
         <form asp-action="Login" method="post">
             @Html.AntiForgeryToken()
 
-            <!-- University ID Input -->
             <div class="input-group-container">
                 <label class="field-label">ID</label>
                 <div class="input-wrap">
@@ -331,7 +318,6 @@
                 <span asp-validation-for="UniversityID" class="text-danger small validation-msg"></span>
             </div>
 
-            <!-- Password Input -->
             <div class="input-group-container">
                 <label class="field-label">Password</label>
                 <div class="input-wrap">
@@ -344,7 +330,6 @@
                 <span asp-validation-for="Password" class="text-danger small validation-msg"></span>
             </div>
 
-            <!-- Submit Button -->
             <button type="submit" class="btn-login">
                 <i class="bi bi-box-arrow-in-right"></i>
                 Sign In

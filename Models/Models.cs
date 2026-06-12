@@ -36,8 +36,6 @@ namespace LibrarySystem.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        [StringLength(20)]
-        public string Role { get; set; } = "Student"; 
 
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }

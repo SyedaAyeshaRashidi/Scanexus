@@ -10,6 +10,7 @@ namespace LibrarySystem.Controllers
     {
         private readonly ILibraryService _service;
         private readonly LibraryDbContext _db;
+
         public StudentController(ILibraryService service, LibraryDbContext db)
         {
             _service = service;
@@ -32,6 +33,7 @@ namespace LibrarySystem.Controllers
                 TempData["Error"] = "Invalid University ID or password.";
                 return View(model);
             }
+
             if (!student.IsActive)
             {
                 TempData["Error"] = "Your account is inactive. Contact the library.";
@@ -40,18 +42,18 @@ namespace LibrarySystem.Controllers
 
             HttpContext.Session.SetString("UniversityID", student.UniversityID);
             HttpContext.Session.SetString("StudentName", student.FullName);
-            HttpContext.Session.SetString("Role", student.Role ?? "Student");
 
-            if (student.Role == "Admin")
-                TempData["Error"] = "Access denied.";
-            return View();
+            return RedirectToAction("Dashboard");
         }
+
         public async Task<IActionResult> Dashboard()
         {
             var uid = HttpContext.Session.GetString("UniversityID");
             if (string.IsNullOrEmpty(uid)) return RedirectToAction("Login");
+
             var vm = await _service.GetDashboardAsync(uid);
             if (vm == null) return RedirectToAction("Login");
+
             return View(vm);
         }
 
@@ -61,6 +63,7 @@ namespace LibrarySystem.Controllers
         {
             var uid = HttpContext.Session.GetString("UniversityID");
             if (string.IsNullOrEmpty(uid)) return RedirectToAction("Login");
+
             var (success, message) = await _service.ReturnBookAsync(txnCode);
             TempData[success ? "Success" : "Error"] = message;
             return RedirectToAction("Dashboard");

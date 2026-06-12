@@ -24,6 +24,7 @@ CREATE TABLE Students (
     CreatedAt    DATETIME NOT NULL DEFAULT GETDATE()
 );
 GO
+Select * FROM Students
 
 CREATE TABLE Books (
     BookID          INT PRIMARY KEY IDENTITY(1,1),
@@ -80,6 +81,4 @@ USE LibraryDB;
 UPDATE Students SET IsActive = 1 WHERE UniversityID = '2024F-BS-0003';
 
 USE LibraryDB;
-ALTER TABLE Students ADD Role VARCHAR(20) NOT NULL DEFAULT 'Student';
-UPDATE Students SET Role = 'Student';
-
+ALTER TABLE Transactions ADD Remarks VARCHAR(300) NULL;

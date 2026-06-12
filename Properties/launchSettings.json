@@ -7,6 +7,7 @@
             "ASPNETCORE_ENVIRONMENT": "Development"
         },
         "applicationUrl": "http://0.0.0.0:60090"
+
     }
   }
 }

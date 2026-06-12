@@ -13,7 +13,6 @@
                 <p class="text-muted small">Point your camera at the book's QR code, or enter the code manually</p>
             </div>
 
-            <!-- Camera QR Scanner -->
             <div class="mb-3 text-center">
                 <div id="reader" class="mx-auto" style="width:280px; display:none;"></div>
                 <button class="btn btn-outline-success btn-sm" id="startCamera">
@@ -23,7 +22,6 @@
 
             <hr class="my-3" />
 
-            <!-- Manual entry form -->
             <form asp-action="Scan" method="post">
                 @Html.AntiForgeryToken()
 
@@ -39,7 +37,6 @@
                     </div>
                 </div>
 
-                <!-- Quick Test Buttons -->
                 <div class="mb-3">
                     <small class="text-muted">Quick test — click a book to fill:</small>
                     <div class="d-flex flex-wrap gap-1 mt-1">
@@ -62,17 +59,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <!-- HTML5-QRCode for real camera scanning -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
-        // Quick fill buttons
         document.querySelectorAll('.qr-fill').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.getElementById('qrInput').value = btn.dataset.qr;
             });
         });
 
-        // Camera QR scanner
         let scanner;
         document.getElementById('startCamera').addEventListener('click', function () {
             const readerDiv = document.getElementById('reader');
