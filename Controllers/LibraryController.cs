@@ -1,4 +1,4 @@
-using LibrarySystem.Models;
+﻿using LibrarySystem.Models;
 using LibrarySystem.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -192,6 +192,122 @@ namespace LibrarySystem.Controllers
             });
 
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
+        }
+        // ──────────────────────────────────────────────
+        // POST /api/library/return-by-qr
+        // Body: { "returnQrCode": "RETURN-TXN-...", "universityId": "..." }
+        // ──────────────────────────────────────────────
+        [HttpPost("return-by-qr")]
+        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+        public async Task<IActionResult> ReturnByQR([FromBody] ReturnByQRRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid request." });
+
+            var (success, message) = await _service.ReturnBookByQRAsync(request.ReturnQrCode, request.UniversityId);
+
+            if (!success)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = message });
+
+            return Ok(new ApiResponse<object> { Success = true, Message = message });
+        }
+
+        // ──────────────────────────────────────────────
+        // GET /api/library/defaulters
+        // ──────────────────────────────────────────────
+        [HttpGet("defaulters")]
+        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        public async Task<IActionResult> GetDefaulters()
+        {
+            var defaulters = await _service.GetDefaultersAsync();
+            var data = defaulters.Select(t => new
+            {
+                t.TxnCode,
+                StudentName = t.Student?.FullName,
+                StudentID = t.Student?.UniversityID,
+                BookTitle = t.Book?.Title,
+                t.DueDate,
+                Fine = t.FineAmount > 0 ? t.FineAmount : t.CalculatedFine,
+                t.Status
+            });
+
+            return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
+        }
+
+        // ──────────────────────────────────────────────
+        // GET /api/library/fine-summary
+        // ──────────────────────────────────────────────
+        [HttpGet("fine-summary")]
+        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        public async Task<IActionResult> GetFineSummary()
+        {
+            var summary = await _service.GetFineSummaryAsync();
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "OK",
+                Data = new
+                {
+                    TotalCalculated = summary.TotalCalculated,
+                    TotalPaid = summary.TotalPaid,
+                    TotalOutstanding = summary.TotalOutstanding
+                }
+            });
+        }
+
+        // ──────────────────────────────────────────────
+        // GET /api/library/most-borrowed
+        // ──────────────────────────────────────────────
+        [HttpGet("most-borrowed")]
+        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        public async Task<IActionResult> GetMostBorrowed()
+        {
+            var books = await _service.GetMostBorrowedBooksAsync();
+            var data = books.Select(b => new { b.Title, b.Author, b.Count });
+            return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
+        }
+
+        // ──────────────────────────────────────────────
+        // GET /api/library/today-transactions
+        // ──────────────────────────────────────────────
+        [HttpGet("today-transactions")]
+        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        public async Task<IActionResult> GetTodayTransactions()
+        {
+            var txns = await _service.GetTodayTransactionsAsync();
+            var data = txns.Select(t => new
+            {
+                t.TxnCode,
+                StudentName = t.Student?.FullName,
+                BookTitle = t.Book?.Title,
+                t.IssueDate,
+                t.ReturnDate,
+                t.Status
+            });
+
+            return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
+        }
+
+        // ──────────────────────────────────────────────
+        // GET /api/library/inventory-status
+        // ──────────────────────────────────────────────
+        [HttpGet("inventory-status")]
+        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        public async Task<IActionResult> GetInventoryStatus()
+        {
+            var inventory = await _service.GetInventoryStatusAsync();
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "OK",
+                Data = new
+                {
+                    TotalCopies = inventory.TotalCopies,
+                    AvailableCopies = inventory.AvailableCopies,
+                    IssuedCopies = inventory.IssuedCopies
+                }
+            });
         }
     }
 }

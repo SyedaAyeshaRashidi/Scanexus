@@ -197,4 +197,9 @@ namespace LibrarySystem.Models
         [Required]
         public string QRCode { get; set; } = string.Empty;
     }
+    public class ReturnByQRRequest
+    {
+        [Required] public string ReturnQrCode { get; set; } = string.Empty;
+        [Required] public string UniversityId { get; set; } = string.Empty;
+    }
 }
