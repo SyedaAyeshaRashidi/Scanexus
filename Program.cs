@@ -1,6 +1,26 @@
 using LibrarySystem.Data;
 using LibrarySystem.Services;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
+
+var appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+
+if (!File.Exists(appSettingsPath))
+{
+    var defaultJson = @"{
+  ""ConnectionStrings"": {
+    ""DefaultConnection"": ""Server=.\\SQLEXPRESS;Database=LibraryDb;Trusted_Connection=True;TrustServerCertificate=True;""
+  },
+  ""Logging"": {
+    ""LogLevel"": {
+      ""Default"": ""Information"",
+      ""Microsoft.AspNetCore"": ""Warning""
+    }
+  },
+  ""AllowedHosts"": ""*""
+}";
+    File.WriteAllText(appSettingsPath, defaultJson);
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +34,8 @@ builder.Services.AddScoped<ILibraryService, LibraryService>();
 
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout        = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly    = true;
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
 
