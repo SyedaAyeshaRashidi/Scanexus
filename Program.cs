@@ -9,7 +9,7 @@ if (!File.Exists(appSettingsPath))
 {
     var defaultJson = @"{
   ""ConnectionStrings"": {
-    ""DefaultConnection"": ""Server=.\\SQLEXPRESS;Database=LibraryDb;Trusted_Connection=True;TrustServerCertificate=True;""
+    ""LibraryDB"": ""Server=.\\SQLEXPRESS;Database=LibraryDb;Trusted_Connection=True;TrustServerCertificate=True;""
   },
   ""Logging"": {
     ""LogLevel"": {
