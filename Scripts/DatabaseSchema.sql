@@ -88,8 +88,13 @@ UPDATE Books SET QRCode = 'SSUET-LIB-BOOK-002' WHERE BookID = 2;
 UPDATE Books SET QRCode = 'SSUET-LIB-BOOK-003' WHERE BookID = 3;
 UPDATE Books SET QRCode = 'SSUET-LIB-BOOK-004' WHERE BookID = 4;
 
-USE LibraryDB;
+
 UPDATE Students SET IsActive = 1 WHERE UniversityID = '2024F-BS-0003';
 
-USE LibraryDB;
+
 ALTER TABLE Transactions ADD Remarks VARCHAR(300) NULL;
+
+USE LibraryDB;
+ALTER TABLE Transactions 
+ADD FineAmount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    FinePaid BIT NOT NULL DEFAULT 0;

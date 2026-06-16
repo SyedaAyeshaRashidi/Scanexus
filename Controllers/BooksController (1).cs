@@ -9,7 +9,6 @@ namespace LibrarySystem.Controllers
         private readonly ILibraryService _service;
         public BooksController(ILibraryService service) => _service = service;
 
-        // GET: /Books/Index
         public async Task<IActionResult> Index()
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("UniversityID")))
@@ -19,8 +18,7 @@ namespace LibrarySystem.Controllers
             return View(books);
         }
 
-        // GET: /Books/Borrow?qr=SSUET-LIB-BOOK-001
-        // Yeh page tab khulta hai jab phone se QR scan karo
+       
         public async Task<IActionResult> Borrow(string qr)
         {
             var book = await _service.GetBookByQRAsync(qr);
@@ -33,7 +31,6 @@ namespace LibrarySystem.Controllers
             return View();
         }
 
-        // POST: /Books/Issue
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Issue(string qrCode)
@@ -63,7 +60,6 @@ namespace LibrarySystem.Controllers
 
             return RedirectToAction("Index");
         }
-        // GET: /Books/Detail?qr=SSUET-LIB-BOOK-001
         [HttpGet]
         public async Task<IActionResult> Detail(string qr)
         {
@@ -82,7 +78,6 @@ namespace LibrarySystem.Controllers
             });
         }
 
-        // POST: /Books/ReturnByQR
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ReturnByQR(string returnQrCode)

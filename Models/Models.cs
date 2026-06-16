@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -6,6 +8,7 @@ namespace LibrarySystem.Models
     public class Student
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // FIXED: Resolves Entity Framework Temporary Value Runtime Crash completely
         public int StudentID { get; set; }
 
         [Required, StringLength(20)]
@@ -36,9 +39,7 @@ namespace LibrarySystem.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        [StringLength(20)]
-        //public string Role { get; set; } = "Student"; 
-
+        // FIXED: Explicitly clean of invalid StringLength attributes to prevent InvalidCastException validation crashes
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 
@@ -54,9 +55,11 @@ namespace LibrarySystem.Models
         [StringLength(100)]
         public string? Email { get; set; }
     }
+
     public class Book
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int BookID { get; set; }
 
         [Required, StringLength(20)]
@@ -85,38 +88,73 @@ namespace LibrarySystem.Models
     public class Transaction
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TransactionID { get; set; }
+
         [Required, StringLength(50)]
         public string TxnCode { get; set; } = string.Empty;
+
         [ForeignKey("Student")]
         public int StudentID { get; set; }
         public Student? Student { get; set; }
+
         [ForeignKey("Book")]
         public int BookID { get; set; }
         public Book? Book { get; set; }
+
         public DateTime IssueDate { get; set; } = DateTime.Now;
         public DateTime DueDate { get; set; }
         public DateTime? ReturnDate { get; set; }
+
         [StringLength(20)]
         public string Status { get; set; } = "Active";
+
         [Required, StringLength(500)]
         public string QRScanData { get; set; } = string.Empty;
+
         [StringLength(300)]
         public string? Remarks { get; set; }
-        [NotMapped]
-        public bool IsOverdue => Status == "Active" && DueDate < DateTime.Now;
-
-        public decimal FineAmount { get; set; } = 0;
-        public bool FinePaid { get; set; } = false;
 
         [NotMapped]
-        public int OverdueDays => Status == "Active" && DueDate < DateTime.Now
-            ? (DateTime.Now - DueDate).Days
-            : 0;
+        public bool IsOverdue => (Status == "Active" || Status == "Overdue") && DueDate < DateTime.Now;
+
+        public decimal FineAmount { get; set; } = 0; // Stores settled payment cash
+        public bool FinePaid { get; set; } = false;   // Boolean validation status
 
         [NotMapped]
-        public decimal CalculatedFine => OverdueDays * 20;
+        public int OverdueDays
+        {
+            get
+            {
+                if (ReturnDate.HasValue)
+                {
+                    int days = (ReturnDate.Value - DueDate).Days;
+                    return days > 0 ? days : 0;
+                }
+                else if (DueDate < DateTime.Now)
+                {
+                    int days = (DateTime.Now - DueDate).Days;
+                    return days > 0 ? days : 0;
+                }
+                return 0;
+            }
+        }
+
+        // FIXED LOGIC: If a book is returned, outstanding dynamic calculation drops to 0 automatically.
+        [NotMapped]
+        public decimal CalculatedFine
+        {
+            get
+            {
+                if (Status == "Returned")
+                {
+                    return 0;
+                }
+                return OverdueDays * 20;
+            }
+        }
     }
+
     public class LoginViewModel
     {
         [Required(ErrorMessage = "University ID is required")]
@@ -153,6 +191,7 @@ namespace LibrarySystem.Models
     {
         [Required] public string TxnCode { get; set; } = string.Empty;
     }
+
     public class QRScanViewModel
     {
         [Required]

@@ -19,28 +19,41 @@ namespace LibrarySystem.Controllers
 
         private bool IsAdmin() => HttpContext.Session.GetString("Role") == "Admin";
 
-        // GET: /Admin/Dashboard
         public async Task<IActionResult> Dashboard()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
 
             ViewBag.TotalBooks = await _db.Books.CountAsync();
             ViewBag.TotalStudents = await _db.Students.CountAsync();
-            ViewBag.ActiveIssues = await _db.Transactions.CountAsync(t => t.Status == "Active");
-            ViewBag.OverdueIssues = await _db.Transactions.CountAsync(t => t.Status == "Overdue");
+            ViewBag.ActiveIssues = await _db.Transactions.CountAsync(t => t.Status == "Active" || t.Status == "Overdue");
+            ViewBag.OverdueIssues = await _db.Transactions.CountAsync(t => t.Status == "Overdue" || (t.Status == "Active" && t.DueDate < DateTime.Now));
             ViewBag.TotalTransactions = await _db.Transactions.CountAsync();
+
+            ViewBag.TotalCopies = await _db.Books.SumAsync(b => b.TotalCopies);
+            ViewBag.AvailableCopies = await _db.Books.SumAsync(b => b.AvailableCopies);
+            ViewBag.IssuedCopies = ViewBag.TotalCopies - ViewBag.AvailableCopies;
+
+            ViewBag.TodayTxns = await _db.Transactions
+                .Include(t => t.Student)
+                .Include(t => t.Book)
+                .Where(t => t.IssueDate.Date == DateTime.Today || (t.ReturnDate.HasValue && t.ReturnDate.Value.Date == DateTime.Today))
+                .ToListAsync();
+
+            ViewBag.Defaulters = await _db.Transactions
+                .Include(t => t.Student)
+                .Include(t => t.Book)
+                .Where(t => t.Status == "Overdue" || (t.Status == "Active" && t.DueDate < DateTime.Now))
+                .ToListAsync();
 
             var recentTxns = await _db.Transactions
                 .Include(t => t.Student)
                 .Include(t => t.Book)
-                .OrderByDescending(t => t.IssueDate)
-                .Take(8)
+                .OrderByDescending((Transaction t) => t.IssueDate)
                 .ToListAsync();
 
             return View(recentTxns);
         }
 
-        // GET: /Admin/Books
         public async Task<IActionResult> Books()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
@@ -48,21 +61,18 @@ namespace LibrarySystem.Controllers
             return View("AdminBooks", books);
         }
 
-        // GET: /Admin/AddBook
         public IActionResult AddBook()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
             return View("AdminAddBook");
         }
 
-        // POST: /Admin/AddBook
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddBook(Book book)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
 
-            // Duplicate check — Title + Author se match karo
             var existing = await _db.Books.FirstOrDefaultAsync(b =>
                 b.Title.ToLower() == book.Title.ToLower() &&
                 b.Author.ToLower() == book.Author.ToLower());
@@ -76,9 +86,8 @@ namespace LibrarySystem.Controllers
                 return RedirectToAction("Books");
             }
 
-            // Sequential QR + ISBN generate karo
             var lastBook = await _db.Books
-                .OrderByDescending(b => b.BookID)
+                .OrderByDescending((Book b) => b.BookID)
                 .FirstOrDefaultAsync();
 
             int nextNum = (lastBook != null) ? lastBook.BookID + 1 : 1;
@@ -93,11 +102,10 @@ namespace LibrarySystem.Controllers
             return RedirectToAction("Books");
         }
 
-        // GET: /Admin/LastBookISBN — Auto ISBN for JS
         public async Task<IActionResult> LastBookISBN()
         {
             var lastBook = await _db.Books
-                .OrderByDescending(b => b.BookID)
+                .OrderByDescending((Book b) => b.BookID)
                 .FirstOrDefaultAsync();
 
             int nextNum = (lastBook != null) ? lastBook.BookID + 1 : 1;
@@ -106,7 +114,6 @@ namespace LibrarySystem.Controllers
             return Json(new { isbn, qr });
         }
 
-        // POST: /Admin/DeleteBook
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteBook(int id)
@@ -133,7 +140,26 @@ namespace LibrarySystem.Controllers
             return RedirectToAction("Books");
         }
 
-        // GET: /Admin/Students
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateDueDate(int transactionId, DateTime newDueDate)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Student");
+
+            var txn = await _db.Transactions.FindAsync(transactionId);
+            if (txn != null)
+            {
+                txn.DueDate = newDueDate;
+                await _db.SaveChangesAsync();
+                TempData["Success"] = "Due date updated successfully.";
+            }
+            else
+            {
+                TempData["Error"] = "Transaction not found.";
+            }
+            return RedirectToAction("Transactions");
+        }
+
         public async Task<IActionResult> Students()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
@@ -143,14 +169,12 @@ namespace LibrarySystem.Controllers
             return View("AdminStudents", students);
         }
 
-        // GET: /Admin/AddStudent
         public IActionResult AddStudent()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
             return View("AdminAddStudent");
         }
 
-        // POST: /Admin/AddStudent
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddStudent(Student student)
@@ -175,19 +199,65 @@ namespace LibrarySystem.Controllers
             return RedirectToAction("Students");
         }
 
-        // GET: /Admin/Transactions
         public async Task<IActionResult> Transactions()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
             var txns = await _db.Transactions
                 .Include(t => t.Student)
                 .Include(t => t.Book)
-                .OrderByDescending(t => t.IssueDate)
+                .OrderByDescending((Transaction t) => t.IssueDate)
                 .ToListAsync();
             return View("AdminTransactions", txns);
         }
 
-        // POST: /Admin/ToggleStudent
+     
+        public async Task<IActionResult> Reports()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Student");
+
+            var mostBorrowed = await _db.Transactions
+                .Include(t => t.Book)
+                .Where(t => t.Book != null)
+                .GroupBy(t => new { t.BookID, t.Book!.Title, t.Book.Author })
+                .Select(g => new { Title = g.Key.Title, Author = g.Key.Author, BorrowCount = g.Count() })
+                .OrderByDescending(x => x.BorrowCount)
+                .Take(5)
+                .ToListAsync();
+
+            var circulationLog = await _db.Transactions
+                .Include(t => t.Student)
+                .Include(t => t.Book)
+                .OrderByDescending(t => t.IssueDate)
+                .ToListAsync();
+
+            ViewBag.MostBorrowed = mostBorrowed;
+            ViewBag.CirculationLog = circulationLog;
+            ViewBag.TotalIssued = await _db.Transactions.CountAsync(t => t.Status == "Active");
+            ViewBag.TotalReturned = await _db.Transactions.CountAsync(t => t.Status == "Returned");
+            ViewBag.TotalOverdue = await _db.Transactions.CountAsync(t => t.Status == "Overdue" || (t.Status == "Active" && t.DueDate < DateTime.Now));
+
+          
+            decimal historyPaidTotal = await _db.Transactions
+                .Where(t => t.Status == "Returned" && t.FineAmount > 0)
+                .SumAsync(t => t.FineAmount);
+
+            decimal currentActiveTotal = circulationLog
+                .Where(t => t.Status == "Overdue" || (t.Status == "Active" && t.DueDate < DateTime.Now))
+                .Sum(t => t.CalculatedFine);
+
+            decimal realTotalCalculated = historyPaidTotal + currentActiveTotal;
+
+            ViewBag.TotalFineCalculated = realTotalCalculated; 
+            ViewBag.TotalFinePaid = historyPaidTotal;        
+            ViewBag.TotalFineOutstanding = realTotalCalculated - historyPaidTotal; 
+
+            ViewBag.FineDetails = circulationLog
+                .Where(t => t.FineAmount > 0 || t.Status == "Overdue" || (t.Status == "Active" && t.DueDate < DateTime.Now))
+                .ToList();
+
+            return View("AdminReports");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStudent(int id)

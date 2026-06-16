@@ -24,7 +24,6 @@ namespace LibrarySystem.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            // Pehle Admin table check karo
             var admin = await _db.Admins.FirstOrDefaultAsync(
                 a => a.AdminID == model.UniversityID && a.PasswordHash == model.Password);
 
@@ -36,7 +35,6 @@ namespace LibrarySystem.Controllers
                 return RedirectToAction("Dashboard", "Admin");
             }
 
-            // Phir Students table check karo
             var student = await _db.Students.FirstOrDefaultAsync(
                 s => s.UniversityID == model.UniversityID && s.PasswordHash == model.Password);
 
