@@ -63,6 +63,24 @@ CREATE TABLE Transactions (
 );
 GO
 
+USE LibraryDB;
+
+CREATE TABLE ActivityLogs (
+    LogID INT PRIMARY KEY IDENTITY(1,1),
+    ActionType VARCHAR(50) NOT NULL,   
+    UserID VARCHAR(20) NULL,            
+    UserName VARCHAR(100) NULL,
+    Details VARCHAR(500) NULL,          
+    IPAddress VARCHAR(50) NULL,
+    Timestamp DATETIME NOT NULL DEFAULT GETDATE()
+);
+
+
+
+
+
+
+
 INSERT INTO Students (UniversityID, FullName, FatherName, Email, PasswordHash, Semester, Batch, IsActive)
 VALUES
 ('2024F-BS-0001', 'Ali Hassan',  'Hassan Khan', 'ali@ssuet.edu.pk',  'Pass@123', 4, '2024F', 1),
@@ -98,3 +116,12 @@ USE LibraryDB;
 ALTER TABLE Transactions 
 ADD FineAmount DECIMAL(10,2) NOT NULL DEFAULT 0,
     FinePaid BIT NOT NULL DEFAULT 0;
+
+
+USE LibraryDB;
+
+UPDATE Students 
+SET PasswordHash = 'B6BC7B58510319A151D168BA3D5AECB3AC0A9708D06DD930F37FBC89B6CDC697';
+
+UPDATE Admins 
+SET PasswordHash = 'E86F78A8A3CAF0B60D8E74E5942AA6D86DC150CD3C03338AEF25B7D2D7E3ACC7';
