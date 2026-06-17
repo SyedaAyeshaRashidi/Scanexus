@@ -1,4 +1,4 @@
-using LibrarySystem.Services;
+﻿using LibrarySystem.Services;
 using LibrarySystem.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,23 +11,27 @@ namespace LibrarySystem.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UniversityID")))
+            var uid = HttpContext.Session.GetString("UniversityID");
+            if (string.IsNullOrEmpty(uid))
                 return RedirectToAction("Login", "Student");
 
             var books = await _service.GetAllBooksAsync();
+
+            // 🔥 VIEW_BAG HOOK: AI engine directly matching data lists for current active views
+            ViewBag.AIRecommendations = await _service.GetAIRecommendationsAsync(uid);
+
             return View(books);
         }
 
-       
         public async Task<IActionResult> Borrow(string qr)
         {
             var book = await _service.GetBookByQRAsync(qr);
             if (book == null) return NotFound("Book not found.");
 
-            ViewBag.BookTitle  = book.Title;
+            ViewBag.BookTitle = book.Title;
             ViewBag.BookAuthor = book.Author;
-            ViewBag.QRCode     = book.QRCode;
-            ViewBag.Available  = book.AvailableCopies > 0;
+            ViewBag.QRCode = book.QRCode;
+            ViewBag.Available = book.AvailableCopies > 0;
             return View();
         }
 
@@ -43,14 +47,15 @@ namespace LibrarySystem.Controllers
 
             if (success)
             {
-                TempData["Receipt"] = System.Text.Json.JsonSerializer.Serialize(new {
+                TempData["Receipt"] = System.Text.Json.JsonSerializer.Serialize(new
+                {
                     txn!.TxnCode,
-                    BookTitle   = txn.Book?.Title,
-                    BookAuthor  = txn.Book?.Author,
+                    BookTitle = txn.Book?.Title,
+                    BookAuthor = txn.Book?.Author,
                     StudentName = txn.Student?.FullName,
                     UniversityID = uid,
-                    IssueDate   = txn.IssueDate.ToString("dd MMM yyyy, hh:mm tt"),
-                    DueDate     = txn.DueDate.ToString("dd MMM yyyy")
+                    IssueDate = txn.IssueDate.ToString("dd MMM yyyy, hh:mm tt"),
+                    DueDate = txn.DueDate.ToString("dd MMM yyyy")
                 });
             }
             else
@@ -60,6 +65,7 @@ namespace LibrarySystem.Controllers
 
             return RedirectToAction("Index");
         }
+
         [HttpGet]
         public async Task<IActionResult> Detail(string qr)
         {

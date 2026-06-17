@@ -258,6 +258,34 @@ namespace LibrarySystem.Controllers
             return View("AdminReports");
         }
 
+        // GET: /Admin/ActivityLogs
+        public async Task<IActionResult> ActivityLogs(string actionType = null)
+        {
+            // Check user is admin or not (Session verification)
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "Admin") return RedirectToAction("Login", "Student");
+
+            // Service se saare logs mangwa liye
+            var logs = await _service.GetActivityLogsAsync(actionType, take: 200);
+
+            // Pass to the view
+            return View(logs);
+        }
+
+        // GET: /Admin/Analytics
+        public async Task<IActionResult> Analytics()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Student");
+
+            ViewBag.MostActiveStudents = await _service.GetMostActiveStudentsAsync();
+            ViewBag.PopularBooks = await _service.GetMostBorrowedBooksAsync();
+            ViewBag.PeakTimings = await _service.GetPeakIssuingTimingsAsync();
+            ViewBag.FineTrends = await _service.GetFineTrendsAsync();
+            ViewBag.BatchStats = await _service.GetBatchWiseStatsAsync();
+
+            return View();
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStudent(int id)

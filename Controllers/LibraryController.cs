@@ -193,10 +193,7 @@ namespace LibrarySystem.Controllers
 
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
         }
-        // ──────────────────────────────────────────────
-        // POST /api/library/return-by-qr
-        // Body: { "returnQrCode": "RETURN-TXN-...", "universityId": "..." }
-        // ──────────────────────────────────────────────
+       
         [HttpPost("return-by-qr")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
@@ -213,9 +210,7 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = message });
         }
 
-        // ──────────────────────────────────────────────
-        // GET /api/library/defaulters
-        // ──────────────────────────────────────────────
+       
         [HttpGet("defaulters")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         public async Task<IActionResult> GetDefaulters()
@@ -235,9 +230,7 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
         }
 
-        // ──────────────────────────────────────────────
-        // GET /api/library/fine-summary
-        // ──────────────────────────────────────────────
+       
         [HttpGet("fine-summary")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         public async Task<IActionResult> GetFineSummary()
@@ -256,9 +249,6 @@ namespace LibrarySystem.Controllers
             });
         }
 
-        // ──────────────────────────────────────────────
-        // GET /api/library/most-borrowed
-        // ──────────────────────────────────────────────
         [HttpGet("most-borrowed")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         public async Task<IActionResult> GetMostBorrowed()
@@ -268,9 +258,7 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
         }
 
-        // ──────────────────────────────────────────────
-        // GET /api/library/today-transactions
-        // ──────────────────────────────────────────────
+        
         [HttpGet("today-transactions")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         public async Task<IActionResult> GetTodayTransactions()
@@ -289,9 +277,7 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
         }
 
-        // ──────────────────────────────────────────────
-        // GET /api/library/inventory-status
-        // ──────────────────────────────────────────────
+        
         [HttpGet("inventory-status")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         public async Task<IActionResult> GetInventoryStatus()

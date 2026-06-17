@@ -1,4 +1,4 @@
-@model List<LibrarySystem.Models.Book>
+﻿@model List<LibrarySystem.Models.Book>
 @{
     ViewData["Title"] = "Books";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -16,7 +16,7 @@
         }
 
             .page-header h4 {
-                color: #fff;
+                color: #ffffff;
                 font-weight: 800;
                 margin: 0;
                 font-size: 1.4rem;
@@ -24,10 +24,11 @@
             }
 
             .page-header p {
-                color: #64748b;
+                color: #cbd5e1 !important;
                 font-size: 0.88rem;
                 margin: 4px 0 0;
                 font-weight: 500;
+                opacity: 0.95;
             }
 
         .btn-add-book {
@@ -54,6 +55,36 @@
                 opacity: 0.95;
             }
 
+        .analytics-summary-row {
+            margin-bottom: 2.5rem;
+        }
+
+        .analytics-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 14px;
+            padding: 1.4rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .analytics-card-title {
+            color: #cbd5e1 !important;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .analytics-card-value {
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 1.6rem;
+            margin: 0;
+        }
+
         .data-table-container {
             background: rgba(11, 11, 30, 0.6);
             backdrop-filter: blur(10px);
@@ -61,6 +92,7 @@
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             overflow: hidden;
+            margin-bottom: 3.5rem;
         }
 
         .table {
@@ -69,19 +101,19 @@
         }
 
             .table thead th {
-                background: rgba(5, 5, 15, 0.8);
-                color: #94a3b8;
-                font-size: 0.72rem;
+                background: rgba(5, 5, 15, 0.84);
+                color: #ffffff !important;
+                font-size: 0.75rem;
                 letter-spacing: 1px;
                 text-transform: uppercase;
-                border-color: rgba(255, 255, 255, 0.05);
-                padding: 1rem 1.4rem;
-                font-weight: 600;
+                border-color: rgba(255, 255, 255, 0.06);
+                padding: 1.1rem 1.4rem;
+                font-weight: 700;
             }
 
             .table tbody td {
                 border-color: rgba(255, 255, 255, 0.03);
-                padding: 1.1rem 1.4rem;
+                padding: 1.2rem 1.4rem;
                 vertical-align: middle;
                 font-size: 0.92rem;
                 background: transparent;
@@ -89,17 +121,18 @@
 
             .table tbody tr:hover td {
                 background: rgba(255, 255, 255, 0.02);
-                color: #fff;
+                color: #ffffff;
             }
 
         .book-title-cell {
-            color: #f1f5f9;
+            color: #ffffff;
             font-weight: 600;
             font-size: 0.95rem;
+            display: block;
         }
 
         .book-author-cell {
-            color: #94a3b8;
+            color: #cbd5e1 !important;
             font-weight: 500;
         }
 
@@ -115,15 +148,15 @@
         }
 
         .copies-indicator {
-            font-size: 0.92rem;
-            font-weight: 600;
+            font-size: 0.95rem;
+            font-weight: 700;
         }
 
         .badge-status-avail {
-            background: rgba(34, 197, 94, 0.1);
-            color: #86efac;
-            border: 1px solid rgba(34, 197, 94, 0.2);
-            padding: 5px 12px;
+            background: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            padding: 6px 14px;
             border-radius: 8px;
             font-size: 0.75rem;
             font-weight: 600;
@@ -131,10 +164,10 @@
         }
 
         .badge-status-empty {
-            background: rgba(239, 68, 68, 0.1);
-            color: #fca5a5;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            padding: 5px 12px;
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            padding: 6px 14px;
             border-radius: 8px;
             font-size: 0.75rem;
             font-weight: 600;
@@ -149,26 +182,63 @@
             font-weight: 600;
             padding: 6px 14px;
             border-radius: 10px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s;
             cursor: pointer;
         }
 
             .btn-remove-destructive:hover {
                 background: rgba(239, 68, 68, 0.15);
                 border-color: #ef4444;
-                color: #fca5a5;
+                color: #ffffff;
             }
+
+        #aiCardSearch:focus {
+            background: rgba(15, 23, 42, 0.9) !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.3) !important;
+            outline: none;
+        }
     </style>
 }
 
 <div class="page-header">
     <div>
         <h4><i class="bi bi-collection-fill me-2" style="color:#3b82f6;"></i>Books Management</h4>
-        <p>@Model.Count titles indexed across global catalog cluster</p>
+        <p>Global Catalog Repositories Indexing Node Clusters</p>
     </div>
     <a href="/Admin/AddBook" class="btn-add-book">
         <i class="bi bi-plus-lg"></i> Add New Book
     </a>
+</div>
+
+<div class="row analytics-summary-row">
+    <div class="col-md-4 mb-2">
+        <div class="analytics-card d-flex align-items-center justify-content-between">
+            <div>
+                <span class="analytics-card-title">Total Allocated Inventory</span>
+                <h3 class="analytics-card-value">@Model.Sum(b => b.TotalCopies) <span style="font-size: 1rem; color: #94a3b8; font-weight: 500; margin-left: 4px;"></span></h3>
+            </div>
+            <i class="bi bi-layers-half text-primary fa-2x" style="color: #3b82f6 !important;"></i>
+        </div>
+    </div>
+    <div class="col-md-4 mb-2">
+        <div class="analytics-card d-flex align-items-center justify-content-between">
+            <div>
+                <span class="analytics-card-title">Currently Distributed</span>
+                <h3 class="analytics-card-value" style="color: #f59e0b !important;">@Model.Sum(b => b.TotalCopies - b.AvailableCopies) <span style="font-size: 1rem; color: #94a3b8; font-weight: 500; margin-left: 4px;"></span></h3>
+            </div>
+            <i class="bi bi-arrow-left-right text-warning fa-2x" style="color: #f59e0b !important;"></i>
+        </div>
+    </div>
+    <div class="col-md-4 mb-2">
+        <div class="analytics-card d-flex align-items-center justify-content-between">
+            <div>
+                <span class="analytics-card-title">Net Available Base</span>
+                <h3 class="analytics-card-value" style="color: #10b981 !important;">@Model.Sum(b => b.AvailableCopies) <span style="font-size: 1rem; color: #94a3b8; font-weight: 500; margin-left: 4px;"></span></h3>
+            </div>
+            <i class="bi bi-check-circle-fill text-success fa-2x" style="color: #10b981 !important;"></i>
+        </div>
+    </div>
 </div>
 
 <div class="data-table-container">
@@ -196,7 +266,7 @@
                         <td>
                             <div class="copies-indicator">
                                 <span style="color: #4ade80;">@b.AvailableCopies</span>
-                                <span style="color: #475569;"> / @b.TotalCopies</span>
+                                <span style="color: #64748b; font-weight: 500;"> / @b.TotalCopies</span>
                             </div>
                         </td>
                         <td>
@@ -225,3 +295,152 @@
         </table>
     </div>
 </div>
+
+<div class="mb-5" style="font-family: 'Segoe UI', Roboto, sans-serif;">
+
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div class="d-flex align-items-center">
+            <div class="p-2 rounded-3 me-3" style="background-color: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.3);">
+                <i class="bi bi-cpu-fill" style="font-size: 1.4rem; color: #3b82f6 !important;"></i>
+            </div>
+            <div>
+                <h5 style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin: 0;">AI Academic Curriculum Recommendation Engine</h5>
+                <p style="color: #cbd5e1 !important; font-size: 0.9rem; margin: 2px 0 0; font-weight: 400; opacity: 0.95;">Cross-referencing live catalog objects with core University course streams</p>
+            </div>
+        </div>
+
+        <div class="position-relative" style="min-width: 320px;">
+            <input type="text" id="aiCardSearch" class="form-control text-white" placeholder="Search by subject / course (e.g., DSA)..."
+                   style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 10px; padding: 10px 15px; font-size: 0.9rem; font-weight: 500; transition: all 0.3s;"
+                   onkeyup="filterAiCards()">
+        </div>
+    </div>
+
+    <div class="row" id="aiCardsContainer">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var book in Model)
+            {
+                string courseName = "";
+                string streamColor = "";
+                string courseCode = "";
+                string searchKeywords = "";
+                bool isMatched = false;
+
+                if (book.Title.Contains("Database", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("SQL", StringComparison.OrdinalIgnoreCase))
+                {
+                    courseName = "Database Management Systems";
+                    streamColor = "#ef4444";
+                    courseCode = "CS-304";
+                    searchKeywords = "database db sql cs-304 systems";
+                    isMatched = true;
+                }
+                else if (book.Title.Contains("Network", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Communication", StringComparison.OrdinalIgnoreCase))
+                {
+                    courseName = "Computer Networking & Infosec";
+                    streamColor = "#10b981";
+                    courseCode = "CS-402";
+                    searchKeywords = "network networking infosec communication cs-402 ccna";
+                    isMatched = true;
+                }
+                else if (book.Title.Contains("Design", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Pattern", StringComparison.OrdinalIgnoreCase))
+                {
+                    courseName = "Software Architecture Models";
+                    streamColor = "#a855f7";
+                    courseCode = "CS-308";
+                    searchKeywords = "design pattern architecture software cs-308 models";
+                    isMatched = true;
+                }
+                else if (book.Title.Contains("Automata", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Computation", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Compiler", StringComparison.OrdinalIgnoreCase))
+                {
+                    courseName = "Theory of Automata & Languages";
+                    streamColor = "#eab308";
+                    courseCode = "CS-302";
+                    searchKeywords = "automata computation compiler languages cs-302 toc";
+                    isMatched = true;
+                }
+                else if (book.Title.Contains("Programming", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Algorithm", StringComparison.OrdinalIgnoreCase))
+                {
+                    courseName = "Data Structures & Algorithms";
+                    streamColor = "#3b82f6";
+                    courseCode = "CS-201";
+                    searchKeywords = "dsa data structures algorithms programming c++ c java cs-201";
+                    isMatched = true;
+                }
+                else if (book.Title.Contains("Medical", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Clinical", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Health", StringComparison.OrdinalIgnoreCase))
+                {
+                    courseName = "Medical Sciences & Therapeutics";
+                    streamColor = "#06b6d4";
+                    courseCode = "MED-101";
+                    searchKeywords = "medical clinical health therapeutics anatomy medicine med-101";
+                    isMatched = true;
+                }
+
+                if (isMatched)
+                {
+                    <div class="col-xl-3 col-md-6 mb-4 ai-recommendation-card" data-keywords="@searchKeywords @book.Title.ToLower() @book.Author.ToLower()">
+                        <div class="card h-100 border-0" style="background: #0b0f19; border: 1px solid rgba(255,255,255,0.06) !important; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 25px rgba(0,0,0,0.5); transition: all 0.3s ease;" onmouseover="this.style.borderColor='@streamColor'; this.style.transform='translateY(-4px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'; this.style.transform='none';">
+
+                            <div style="height: 4px; background: @streamColor;"></div>
+
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="mb-3">
+                                        <span class="badge" style="background-color: rgba(255, 255, 255, 0.05); color: #ffffff; border: 1px solid rgba(255,255,255,0.15); font-size: 0.75rem; font-weight: 700; font-family: monospace; padding: 4px 8px;">
+                                            @courseCode
+                                        </span>
+                                    </div>
+
+                                    <div style="color: #94a3b8 !important; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px;">COURSE</div>
+                                    <h5 style="color: #ffffff; font-weight: 800; font-size: 1.2rem; line-height: 1.3; margin-bottom: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                        @courseName
+                                    </h5>
+
+                                    <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <div style="color: @streamColor; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px;">RECOMMENDED BOOK</div>
+                                        <div class="text-white font-weight-bold" style="font-size: 0.95rem; line-height: 1.4; color: #ffffff !important;">
+                                            @book.Title
+                                        </div>
+                                        <div style="color: #cbd5e1 !important; font-size: 0.8rem; font-weight: 500; margin-top: 6px;">
+                                            by @book.Author
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        }
+    </div>
+
+    <div id="aiNoResults" class="text-center py-5 rounded-3 d-none" style="background: rgba(11, 11, 30, 0.4); border: 1px solid rgba(255,255,255,0.05);">
+        <i class="bi bi-exclamation-triangle text-warning fa-2x mb-2 d-block"></i>
+        <p class="text-muted m-0">No contextually matching academic course nodes found.</p>
+    </div>
+</div>
+
+<script>
+    function filterAiCards() {
+        let input = document.getElementById('aiCardSearch').value.toLowerCase().trim();
+        let cards = document.getElementsByClassName('ai-recommendation-card');
+        let visibleCount = 0;
+
+        for (let i = 0; i < cards.length; i++) {
+            let keywords = cards[i].getAttribute('data-keywords');
+            if (keywords.includes(input)) {
+                cards[i].style.display = "";
+                visibleCount++;
+            } else {
+                cards[i].style.display = "none";
+            }
+        }
+
+        let noResults = document.getElementById('aiNoResults');
+        if (visibleCount === 0) {
+            noResults.classList.remove('d-none');
+        } else {
+            noResults.classList.add('d-none');
+        }
+    }
+</script>

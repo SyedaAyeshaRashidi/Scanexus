@@ -8,7 +8,7 @@ namespace LibrarySystem.Models
     public class Student
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // FIXED: Resolves Entity Framework Temporary Value Runtime Crash completely
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public int StudentID { get; set; }
 
         [Required, StringLength(20)]
@@ -39,7 +39,6 @@ namespace LibrarySystem.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // FIXED: Explicitly clean of invalid StringLength attributes to prevent InvalidCastException validation crashes
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 
@@ -118,8 +117,8 @@ namespace LibrarySystem.Models
         [NotMapped]
         public bool IsOverdue => (Status == "Active" || Status == "Overdue") && DueDate < DateTime.Now;
 
-        public decimal FineAmount { get; set; } = 0; // Stores settled payment cash
-        public bool FinePaid { get; set; } = false;   // Boolean validation status
+        public decimal FineAmount { get; set; } = 0; 
+        public bool FinePaid { get; set; } = false;   
 
         [NotMapped]
         public int OverdueDays
@@ -140,7 +139,6 @@ namespace LibrarySystem.Models
             }
         }
 
-        // FIXED LOGIC: If a book is returned, outstanding dynamic calculation drops to 0 automatically.
         [NotMapped]
         public decimal CalculatedFine
         {
@@ -172,6 +170,7 @@ namespace LibrarySystem.Models
         public List<Transaction> ActiveBooks { get; set; } = new();
         public List<Transaction> History { get; set; } = new();
         public int BooksRemaining => 3 - ActiveBooks.Count;
+        public List<Book> AIRecommendations { get; set; } = new List<Book>();
     }
 
     public class ApiResponse<T>
@@ -202,4 +201,29 @@ namespace LibrarySystem.Models
         [Required] public string ReturnQrCode { get; set; } = string.Empty;
         [Required] public string UniversityId { get; set; } = string.Empty;
     }
+
+    public class ActivityLog
+    {
+        [Key]
+        public int LogID { get; set; }
+
+        [Required, StringLength(50)]
+        public string ActionType { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string? UserID { get; set; }
+
+        [StringLength(100)]
+        public string? UserName { get; set; }
+
+        [StringLength(500)]
+        public string? Details { get; set; }
+
+        [StringLength(50)]
+        public string? IPAddress { get; set; }
+
+        public DateTime Timestamp { get; set; } = DateTime.Now;
+    }
+
+
 }

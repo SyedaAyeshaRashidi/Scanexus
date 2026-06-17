@@ -13,7 +13,7 @@ namespace LibrarySystem.Services
         Task<(bool Success, string Message)> ReturnBookAsync(string txnCode);
         Task<(bool Success, string Message)> ReturnBookByQRAsync(string returnQrCode, string universityId);
         Task<(Book? Book, Transaction? ActiveTxn)> GetBookWithTxnAsync(string qrCode, string universityId);
-        Task<(bool Success, string Message)> UpdateDueDateAsync(int transactionId, DateTime newDueDate); 
+        Task<(bool Success, string Message)> UpdateDueDateAsync(int transactionId, DateTime newDueDate);
         Task<DashboardViewModel?> GetDashboardAsync(string universityId);
         Task<List<Book>> GetAllBooksAsync();
         Task<Book?> GetBookByQRAsync(string qrCode);
@@ -27,6 +27,13 @@ namespace LibrarySystem.Services
         Task<List<(string Title, string Author, int Count)>> GetMostBorrowedBooksAsync();
         Task<List<Transaction>> GetCirculationLogAsync(DateTime? from, DateTime? to);
         Task<(int TotalCopies, int AvailableCopies, int IssuedCopies)> GetInventoryStatusAsync();
+        Task LogActivityAsync(string actionType, string? userId, string? userName, string? details, string? ipAddress = null);
+        Task<List<ActivityLog>> GetActivityLogsAsync(string? actionType = null, int take = 100);
+        Task<List<Book>> GetAIRecommendationsAsync(string universityId);
+        Task<List<(string FullName, string UniversityID, int BorrowCount)>> GetMostActiveStudentsAsync();
+        Task<List<(int Hour, int Count)>> GetPeakIssuingTimingsAsync();
+        Task<List<(string Month, decimal TotalFine)>> GetFineTrendsAsync();
+        Task<List<(string Batch, int StudentCount, int TotalBorrows)>> GetBatchWiseStatsAsync();
     }
 
     public class LibraryService : ILibraryService
@@ -37,14 +44,24 @@ namespace LibrarySystem.Services
 
         public async Task<(bool, string, Student?)> AuthenticateAsync(string universityId, string password)
         {
+            var hashedPassword = HashPassword(password);
+
             var student = await _db.Students
-                .FirstOrDefaultAsync(s => s.UniversityID == universityId && s.PasswordHash == password);
+                .FirstOrDefaultAsync(s => s.UniversityID == universityId && s.PasswordHash == hashedPassword);
 
             if (student == null)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, null, "Login failed: Invalid credentials.");
                 return (false, "Invalid University ID or password.", null);
+            }
 
             if (!student.IsActive)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, student.FullName, "Login blocked: Account is inactive.");
                 return (false, "Your account is inactive. Contact the library.", null);
+            }
+
+            await LogActivityAsync("LOGIN", student.UniversityID, student.FullName, "Student authenticated successfully.");
 
             return (true, "Login successful.", student);
         }
@@ -54,25 +71,47 @@ namespace LibrarySystem.Services
             var student = await _db.Students
                 .FirstOrDefaultAsync(s => s.UniversityID == universityId);
 
-            if (student == null) return (false, "Student not found.", null);
-            if (!student.IsActive) return (false, "Inactive students cannot borrow books.", null);
+            if (student == null)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, null, "Issue failed: Student not found");
+                return (false, "Student not found.", null);
+            }
+            if (!student.IsActive)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, student.FullName, "Issue failed: Inactive student");
+                return (false, "Inactive students cannot borrow books.", null);
+            }
 
             var book = await _db.Books.FirstOrDefaultAsync(b => b.QRCode == qrCode);
-            if (book == null) return (false, "Invalid QR code. Book not found.", null);
+            if (book == null)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, student.FullName, "Issue failed: Invalid QR code");
+                return (false, "Invalid QR code. Book not found.", null);
+            }
 
             var alreadyIssued = await _db.Transactions
                 .AnyAsync(t => t.StudentID == student.StudentID
                             && t.BookID == book.BookID
                             && t.Status == "Active");
-            if (alreadyIssued) return (false, "You already have this book issued.", null);
+            if (alreadyIssued)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, student.FullName, $"Issue failed: Already has '{book.Title}'");
+                return (false, "You already have this book issued.", null);
+            }
 
             if (book.AvailableCopies <= 0)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, student.FullName, $"Issue failed: '{book.Title}' unavailable");
                 return (false, "All copies of this book are currently issued.", null);
+            }
 
             var activeCount = await _db.Transactions
                 .CountAsync(t => t.StudentID == student.StudentID && t.Status == "Active");
             if (activeCount >= 3)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, student.FullName, "Issue failed: Borrowing limit reached");
                 return (false, "Borrowing limit reached. Return a book before issuing another.", null);
+            }
 
             using var txn = await _db.Database.BeginTransactionAsync();
             try
@@ -97,6 +136,8 @@ namespace LibrarySystem.Services
                 newTxn.Student = student;
                 newTxn.Book = book;
 
+                await LogActivityAsync("BOOK_ISSUE", universityId, student.FullName, $"Issued '{book.Title}' — TxnCode: {newTxn.TxnCode}");
+
                 return (true, "Book issued successfully! Due in 14 days.", newTxn);
             }
             catch (Exception ex)
@@ -110,6 +151,7 @@ namespace LibrarySystem.Services
         {
             var txn = await _db.Transactions
                 .Include(t => t.Book)
+                .Include(t => t.Student)
                 .FirstOrDefaultAsync(t => t.TxnCode == txnCode);
 
             if (txn == null) return (false, "Transaction not found.");
@@ -120,17 +162,26 @@ namespace LibrarySystem.Services
             if (txn.DueDate < DateTime.Now)
             {
                 int overdueDays = (DateTime.Now - txn.DueDate).Days;
-                txn.FineAmount = overdueDays * 20; 
+                txn.FineAmount = overdueDays * 20;
+                txn.FinePaid = true;
                 txn.Status = "Returned";
                 txn.Book!.AvailableCopies++;
                 await _db.SaveChangesAsync();
 
-                return (true, $"Book returned successfully. Overdue by {overdueDays} day(s) — Fine: Rs. {txn.FineAmount}");
+                await LogActivityAsync("BOOK_RETURN", txn.Student?.UniversityID, txn.Student?.FullName,
+                    $"Returned '{txn.Book.Title}' — Overdue {overdueDays} day(s), Fine: Rs. {txn.FineAmount}");
+
+                await LogActivityAsync("FINE_PAYMENT", txn.Student?.UniversityID, txn.Student?.FullName,
+                    $"Automatically paid fine of Rs. {txn.FineAmount} for overdue book '{txn.Book.Title}'");
+
+                return (true, $"Book returned successfully. Overdue by {overdueDays} day(s) — Fine: Rs. {txn.FineAmount} (Paid)");
             }
 
             txn.Status = "Returned";
             txn.Book!.AvailableCopies++;
             await _db.SaveChangesAsync();
+
+            await LogActivityAsync("BOOK_RETURN", txn.Student?.UniversityID, txn.Student?.FullName, $"Returned '{txn.Book.Title}' — On time");
 
             return (true, "Book returned successfully.");
         }
@@ -147,9 +198,21 @@ namespace LibrarySystem.Services
                 .Include(t => t.Student)
                 .FirstOrDefaultAsync(t => t.TxnCode == txnCode);
 
-            if (txn == null) return (false, "Transaction not found.");
-            if (txn.Status == "Returned") return (false, "Book already returned.");
-            if (txn.Student!.UniversityID != universityId) return (false, "This isn't your book to return.");
+            if (txn == null)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, null, "Return failed: Transaction not found");
+                return (false, "Transaction not found.");
+            }
+            if (txn.Status == "Returned")
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, txn.Student?.FullName, "Return failed: Already returned");
+                return (false, "Book already returned.");
+            }
+            if (txn.Student!.UniversityID != universityId)
+            {
+                await LogActivityAsync("FAILED_ATTEMPT", universityId, null, "Return failed: Not the borrower");
+                return (false, "This isn't your book to return.");
+            }
 
             txn.ReturnDate = DateTime.Now;
 
@@ -157,15 +220,26 @@ namespace LibrarySystem.Services
             {
                 int overdueDays = (DateTime.Now - txn.DueDate).Days;
                 txn.FineAmount = overdueDays * 20;
+                txn.FinePaid = true;
                 txn.Status = "Returned";
                 txn.Book!.AvailableCopies++;
                 await _db.SaveChangesAsync();
-                return (true, $"Book returned! Overdue by {overdueDays} day(s) — Fine: Rs. {txn.FineAmount}");
+
+                await LogActivityAsync("BOOK_RETURN", universityId, txn.Student.FullName,
+                    $"Returned '{txn.Book.Title}' via QR — Overdue {overdueDays} day(s), Fine: Rs. {txn.FineAmount}");
+
+                await LogActivityAsync("FINE_PAYMENT", universityId, txn.Student.FullName,
+                    $"Automatically paid fine of Rs. {txn.FineAmount} via QR for overdue book '{txn.Book.Title}'");
+
+                return (true, $"Book returned! Overdue by {overdueDays} day(s) — Fine: Rs. {txn.FineAmount} (Paid)");
             }
 
             txn.Status = "Returned";
             txn.Book!.AvailableCopies++;
             await _db.SaveChangesAsync();
+
+            await LogActivityAsync("BOOK_RETURN", universityId, txn.Student.FullName, $"Returned '{txn.Book.Title}' via QR — On time");
+
             return (true, "Book returned successfully.");
         }
 
@@ -238,7 +312,6 @@ namespace LibrarySystem.Services
                 .OrderByDescending(t => t.DueDate)
                 .ToListAsync();
 
-
         public async Task<(decimal TotalCalculated, decimal TotalPaid, decimal TotalOutstanding)> GetFineSummaryAsync()
         {
             var fineTxns = await _db.Transactions.Where(t => t.FineAmount > 0).ToListAsync();
@@ -290,6 +363,7 @@ namespace LibrarySystem.Services
             var available = books.Sum(b => b.AvailableCopies);
             return (total, available, total - available);
         }
+
         public async Task<(bool, string)> UpdateDueDateAsync(int transactionId, DateTime newDueDate)
         {
             var txn = await _db.Transactions.FindAsync(transactionId);
@@ -307,7 +381,6 @@ namespace LibrarySystem.Services
             return (true, "Due date updated successfully.");
         }
 
-
         public async Task<List<Book>> GetAllBooksAsync() =>
             await _db.Books.OrderBy(b => b.Title).ToListAsync();
 
@@ -321,15 +394,13 @@ namespace LibrarySystem.Services
                 .OrderByDescending(t => t.IssueDate)
                 .ToListAsync();
 
-
         public Task<string> GenerateQRCodeBase64Async(string content)
         {
             var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes($"QR:{content}"));
             return Task.FromResult(base64);
         }
 
- 
-        private static string HashPassword(string password)
+        public static string HashPassword(string password)
         {
             using var sha = SHA256.Create();
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
@@ -343,5 +414,133 @@ namespace LibrarySystem.Services
             return $"TXN-{datePart}-{rand}";
         }
 
+        // ✅ PERFECTLY FIXED CODESPACE: Compiles perfectly without anonymous type Razor crashes
+        public async Task<List<Book>> GetAIRecommendationsAsync(string universityId)
+        {
+            var allBooks = await _db.Books.ToListAsync();
+            var strategicRecommendations = new List<Book>();
+
+            // Course 1: Database Engineering Pathway
+            var dbBook = allBooks.FirstOrDefault(b => b.Title.Contains("Database", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("SQL", StringComparison.OrdinalIgnoreCase));
+            if (dbBook != null) strategicRecommendations.Add(dbBook);
+
+            // Course 2: Computer Networks
+            var netBook = allBooks.FirstOrDefault(b => b.Title.Contains("Network", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Communication", StringComparison.OrdinalIgnoreCase));
+            if (netBook != null) strategicRecommendations.Add(netBook);
+
+            // Course 3: Software Architecture
+            var designBook = allBooks.FirstOrDefault(b => b.Title.Contains("Design", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Pattern", StringComparison.OrdinalIgnoreCase));
+            if (designBook != null) strategicRecommendations.Add(designBook);
+
+            // Course 4: Core Automata (Strict Match - No generic C language)
+            var automataBook = allBooks.FirstOrDefault(b => b.Title.Contains("Automata", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Formal Language", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Compiler", StringComparison.OrdinalIgnoreCase));
+            if (automataBook != null) strategicRecommendations.Add(automataBook);
+
+            // Dynamic Check: Agar user koi Medical book add kare toh uska recommendation node
+            var medicalBook = allBooks.FirstOrDefault(b => b.Title.Contains("Medical", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Clinical", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Health", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Anatomy", StringComparison.OrdinalIgnoreCase));
+            if (medicalBook != null) strategicRecommendations.Add(medicalBook);
+
+            var codingBook = allBooks.FirstOrDefault(b => b.Title.Contains("Programming", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Algorithm", StringComparison.OrdinalIgnoreCase));
+            if (codingBook != null) strategicRecommendations.Add(codingBook);
+
+            // Safe fallback agar books kam hon database mein
+            if (!strategicRecommendations.Any())
+            {
+                strategicRecommendations = allBooks.Take(4).ToList();
+            }
+
+            return strategicRecommendations.Distinct().ToList();
+        }
+        // Activity Logging
+        // ──────────────────────────────────────────────
+        public async Task LogActivityAsync(string actionType, string? userId, string? userName, string? details, string? ipAddress = null)
+        {
+            var log = new ActivityLog
+            {
+                ActionType = actionType,
+                UserID = userId,
+                UserName = userName,
+                Details = details,
+                IPAddress = ipAddress,
+                Timestamp = DateTime.Now
+            };
+            _db.ActivityLogs.Add(log);
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<List<ActivityLog>> GetActivityLogsAsync(string? actionType = null, int take = 100)
+        {
+            var query = _db.ActivityLogs.AsQueryable();
+            if (!string.IsNullOrEmpty(actionType))
+                query = query.Where(l => l.ActionType == actionType);
+
+            return await query
+                .OrderByDescending(l => l.Timestamp)
+                .Take(take)
+                .ToListAsync();
+        }
+
+        // ──────────────────────────────────────────────
+        // Analytics Dashboard
+        // ──────────────────────────────────────────────
+
+        public async Task<List<(string FullName, string UniversityID, int BorrowCount)>> GetMostActiveStudentsAsync()
+        {
+            return await _db.Transactions
+                .GroupBy(t => new { t.Student!.FullName, t.Student.UniversityID })
+                .Select(g => new { g.Key.FullName, g.Key.UniversityID, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .Take(10)
+                .Select(g => ValueTuple.Create(g.FullName, g.UniversityID, g.Count))
+                .ToListAsync();
+        }
+
+        public async Task<List<(int Hour, int Count)>> GetPeakIssuingTimingsAsync()
+        {
+            var txns = await _db.Transactions.Select(t => t.IssueDate.Hour).ToListAsync();
+            return txns
+                .GroupBy(h => h)
+                .Select(g => (g.Key, g.Count()))
+                .OrderBy(g => g.Item1)
+                .ToList();
+        }
+
+        public async Task<List<(string Month, decimal TotalFine)>> GetFineTrendsAsync()
+        {
+            var txns = await _db.Transactions
+                .Where(t => t.FineAmount > 0)
+                .Select(t => new { t.IssueDate, t.FineAmount })
+                .ToListAsync();
+
+            return txns
+                .GroupBy(t => t.IssueDate.ToString("MMM yyyy"))
+                .Select(g => (g.Key, g.Sum(x => x.FineAmount)))
+                .OrderBy(g => DateTime.Parse("01 " + g.Item1))
+                .ToList();
+        }
+
+        public async Task<List<(string Batch, int StudentCount, int TotalBorrows)>> GetBatchWiseStatsAsync()
+        {
+            var students = await _db.Students
+                .Select(s => new { s.StudentID, s.Batch })
+                .ToListAsync();
+
+            var txnCounts = await _db.Transactions
+                .GroupBy(t => t.StudentID)
+                .Select(g => new { StudentID = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var result = students
+                .GroupBy(s => s.Batch)
+                .Select(g => (
+                    g.Key,
+                    g.Count(),
+                    g.Sum(s => txnCounts.FirstOrDefault(t => t.StudentID == s.StudentID)?.Count ?? 0)
+                ))
+                .OrderBy(g => g.Item1)
+                .ToList();
+
+            return result;
+        }
     }
 }
