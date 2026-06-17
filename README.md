@@ -1,150 +1,37 @@
-# QR-Based Digital Library System
-**Sir Syed University of Engineering & Technology**  
-**CS & IT Department | Spring 2026 | Database Systems (CS-229T)**  
-**Assignment #1 — PBL**
-
----
+# Scanexus - Smart Library System
 
 ## Project Overview
 
-A smart library system where students can request and receive books by scanning a **QR code**. Built with:
+Scanexus is a QR-Based Digital Library System developed for the Database System (CS-229T) course. 
 
-- **Backend**: ASP.NET Core 8 MVC + REST API
-- **Database**: SQL Server (SSMS)
-- **ORM**: Entity Framework Core
-- **API Docs**: Swagger/OpenAPI
+Initially focused on an automated issuing module, the system has now been upgraded to achieve full circulation automation. The platform allows students to request, receive, and return books on demand by scanning a QR code. Built using the ASP.NET Core MVC architecture, the system verifies availability, handles digital history tracking, and automatically calculates fines for overdue items. Librarians can monitor all circulation activities, inventory, and users through a comprehensive admin dashboard.
 
 ---
 
-## ER Diagram
+## Technology Stack
 
-```
-┌─────────────────────┐         ┌──────────────────────┐
-│      STUDENTS        │         │        BOOKS          │
-├─────────────────────┤         ├──────────────────────┤
-│ PK  StudentID (INT) │         │ PK  BookID (INT)      │
-│     UniversityID    │         │     ISBN (UNIQUE)     │
-│     FullName        │         │     Title             │
-│     FatherName      │         │     Author            │
-│     Email (UNIQUE)  │         │     Publisher         │
-│     PasswordHash    │         │     TotalCopies       │
-│     Semester        │         │     AvailableCopies   │
-│     Batch           │         │     QRCode (UNIQUE)   │
-│     IsActive (BIT)  │         │     AddedAt           │
-│     CreatedAt       │         └──────────┬───────────┘
-└──────────┬──────────┘                    │
-           │  1                            │  1
-           │                               │
-           │          TRANSACTIONS         │
-           │    ┌──────────────────────┐   │
-           │    │ PK  TransactionID    │   │
-           └────┤ FK  StudentID        │   │
-                │ FK  BookID           ├───┘
-                │     TxnCode (UNIQUE) │
-                │     IssueDate        │
-                │     DueDate          │
-                │     ReturnDate       │
-                │     Status           │
-                │     QRScanData       │
-                │     Remarks          │
-                └──────────────────────┘
-```
+### Frontend
+* ASP.NET Core MVC (Razor Views)
+* HTML5 & CSS3
 
-**Relationships:**
-- One Student → Many Transactions
-- One Book → Many Transactions
-- Transactions are NEVER deleted (permanent history)
-- Active student constraint enforced at DB + application level
+### Backend & Logic
+* ASP.NET Core Web App (Controllers & Models)
+* C# 
+* ngrok (Implemented to allow global cross-device access for the QR scanning logic)
+
+### Database
+* Microsoft SQL Server (SSMS 2022)
 
 ---
 
-## Business Rules
-
-| Rule | Implementation |
-|------|---------------|
-| Max 3 books per student | Checked in `sp_IssueBook` and `LibraryService.IssueBookAsync()` |
-| Same book not issued to 2 students simultaneously | `AvailableCopies` decremented atomically; checked before issue |
-| Only active students can borrow | `IsActive = 1` check in both SP and service |
-| Old transactions never deleted | No DELETE on Transactions; only Status updates |
-| Each scan generates unique Transaction ID | `TxnCode = "TXN-{date}-{sequence}"` |
-| Due date = 14 days from issue | Calculated on insert |
-
----
-
-## Project Structure
-
-```
-LibrarySystem/
-├── Controllers/
-│   ├── LibraryController.cs    ← REST API (8 endpoints)
-│   ├── StudentController.cs    ← Login, Dashboard, Scan, Return
-│   └── BooksController.cs      ← Book catalog + QR display
-├── Models/
-│   └── Models.cs               ← All models + ViewModels
-├── Data/
-│   └── LibraryDbContext.cs     ← EF Core DbContext
-├── Services/
-│   └── LibraryService.cs       ← Business logic layer
-├── Views/
-│   ├── Shared/_Layout.cshtml
-│   ├── Student/
-│   │   ├── Login.cshtml
-│   │   ├── Dashboard.cshtml
-│   │   └── Scan.cshtml
-│   └── Books/
-│       └── Index.cshtml
-├── Scripts/
-│   └── DatabaseSchema.sql      ← Full DB script with SPs + seed data
-├── Program.cs
-└── appsettings.json
-```
-
----
-
-## Setup Instructions
-
-### Step 1 – Database (SSMS)
-
-1. Open **SQL Server Management Studio**
-2. Connect to your SQL Server instance (usually `.\SQLEXPRESS` or `.`)
-3. Open `Scripts/DatabaseSchema.sql`
-4. Press **F5** to execute — this creates:
-   - `LibraryDB` database
-   - All 3 tables with constraints
-   - 2 stored procedures (`sp_IssueBook`, `sp_ReturnBook`, `sp_GetStudentDashboard`)
-   - Seed data (4 students, 5 books)
-
-### Step 2 – Connection String
-
-Edit `appsettings.json`:
-```json
-"ConnectionStrings": {
-    "LibraryDB": "Server=.;Database=LibraryDB;Trusted_Connection=True;TrustServerCertificate=True;"
-}
-```
-
-> If your server name is different (e.g. `LAPTOP-XYZ\SQLEXPRESS`), update `Server=` accordingly.
-
-### Step 3 – Run the Application
-
-```bash
-cd LibrarySystem
-dotnet restore
-dotnet run
-```
-
-Open: `https://localhost:5001`
-
----
-
-## API Documentation
+## API Modules
 
 Swagger UI available at: `https://localhost:5001/swagger`
 
 ### Endpoints
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+| :--- | :--- | :--- |
 | POST | `/api/library/login` | Student authentication |
 | POST | `/api/library/issue` | Issue book via QR code |
 | POST | `/api/library/return` | Return a book |
@@ -153,108 +40,74 @@ Swagger UI available at: `https://localhost:5001/swagger`
 | GET | `/api/library/scan?qr={code}` | Scan QR — get book info |
 | GET | `/api/library/transactions` | All transactions (admin) |
 
-### Sample API Calls
+---
 
-**Login:**
-```http
-POST /api/library/login
-Content-Type: application/json
+## Features Implemented (Assignments 1 & 2)
 
-{
-  "universityID": "2024F-BS-0001",
-  "password": "Pass@123"
-}
-```
+### Student Panel
+* **Authentication:** Login using university ID.
+* **QR Borrowing:** Scan QR code using a mobile device via ngrok remote access. The system prevents issuing unavailable books or exceeding the 3-book limit.
+* **QR Returns:** Scan QR to return books, automatically updating the return date and changing the book's availability status.
+* **Dashboard & History:** View issued books, due dates, and track borrowing history digitally.
+* **Notifications:** Receive overdue warnings and automated fine calculations.
 
-**Issue Book:**
-```http
-POST /api/library/issue
-Content-Type: application/json
+### Librarian / Admin Dashboard
+Librarians can monitor all circulation activities using the dedicated dashboard:
+* **General Metrics:** View total issued books, overdue books, and active borrowers.
+* **Financial Reporting:** Access fine reports and a fine collection summary.
+* **Inventory & Analytics:** Monitor daily transactions, active inventory, and track the most borrowed books.
+* **User Management:** Monitor active borrowers and view the defaulters list.
 
-{
-  "universityID": "2024F-BS-0001",
-  "qrCode": "SSUET-LIB-BOOK-978-0-13-468599-1"
-}
-```
-
-**Return Book:**
-```http
-POST /api/library/return
-Content-Type: application/json
-
-{
-  "txnCode": "TXN-20260524-123456"
-}
-```
-
-**Response Format:**
-```json
-{
-  "success": true,
-  "message": "Book issued successfully! Due in 14 days.",
-  "data": {
-    "txnCode": "TXN-20260524-847392",
-    "issueDate": "2026-05-24T10:30:00",
-    "dueDate": "2026-06-07T10:30:00",
-    "bookTitle": "Database System Concepts",
-    "studentName": "Ali Hassan"
-  }
-}
-```
+### System Features
+* Generate unique transaction IDs and store issue history permanently.
+* Notification engine for overdue warnings.
+* Automated fine calculation engine.
 
 ---
 
-## QR Code Format
+## Database Schema
 
-Each book's QR code follows this format:
-```
-SSUET-LIB-BOOK-{ISBN}
-```
+The complete relational schema of the database is available in the project file.
 
-Example: `SSUET-LIB-BOOK-978-0-13-468599-1`
+Refer to this document for table structures, keys, and relationships used in the project.
 
-The QR scan page supports:
-1. **Camera scanning** via `html5-qrcode` library
-2. **Manual entry** (for testing)
-3. **Quick-fill buttons** for demo
 
----
+## Borrowing & Return Workflows
 
-## Demo Credentials
+### Borrowing Workflow
+1. Student logs in using their university ID.
+2. Student accesses the application on their mobile device via the provided ngrok link.
+3. Student scans the QR code provided in the book catalog.
+4. Backend validates student eligibility, active status, book availability, and borrowing limits.
+5. A unique transaction ID is generated, and the book is issued digitally without manual intervention.
+6. Transaction records are permanently stored in the database.
 
-| University ID | Password | Status |
-|---------------|----------|--------|
-| 2024F-BS-0001 | Pass@123 | Active |
-| 2024F-BS-0002 | Pass@123 | Active |
-| 2024F-BS-0003 | Pass@123 | Active |
-| 2024F-BS-0099 | Pass@123 | **Inactive** (cannot borrow) |
+### Return Workflow
+1. Student scans the QR code to return the borrowed book.
+2. The system registers the action and updates the return date in the database.
+3. The availability status of the book is immediately changed to available.
+4. The system calculates any overdue fine automatically.
+5. If applicable, the student is notified of overdue warnings or fines.
 
----
 
-## Test Scenarios
+## Project Scope & Deliverables
 
-1. **Normal issue** → Login, scan QR, book issued, transaction ID generated
-2. **Borrow limit** → Issue 3 books, try 4th → "Limit reached" error
-3. **Unavailable book** → Set AvailableCopies=0 in DB, scan → "Unavailable" error
-4. **Inactive student** → Login as 2024F-BS-0099 → "Inactive account" error
-5. **Duplicate issue** → Scan same book QR twice → "Already issued" error
-6. **Return** → Click Return on dashboard → book status updated, copies incremented
-7. **History preserved** → Returned transactions still visible in history
+### Implemented Modules
+* Database schema and SQL scripts
+* Student authentication module and dashboard
+* QR issuing and return module
+* Transaction management and reporting system
+* Fine system and notification engine
+* Admin/Librarian dashboard
+* API documentation
 
----
 
-## SQL Scripts Summary
+## Authors
 
-| Object | Type | Purpose |
-|--------|------|---------|
-| `Students` | Table | Student records with IsActive flag |
-| `Books` | Table | Book catalog with QR codes & availability |
-| `Transactions` | Table | Issue/return records — never deleted |
-| `sp_IssueBook` | Stored Proc | Atomic issue with all 5 validations |
-| `sp_ReturnBook` | Stored Proc | Return with copy increment |
-| `sp_GetStudentDashboard` | Stored Proc | Student's book history |
-| `SeqTransaction` | Sequence | Auto-increment for TxnCode |
+**Syeda Ayesha Rashidi** --> 2024F-BCS-057  
+**Yousuf Khan** --> 2024F-BCS-106  
+**Hafsa Fatima** --> 2024F-BCS-075  
+**Syed Farzan Ali Anvery** --> 2024F-BCS-095
 
----
-
-*Submitted by: [Your Name] | Roll No: [Your Roll No] | Section: [Your Section]*
+Database System (CS-229T) Assignment 2
+QR-Based Digital Library System
