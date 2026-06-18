@@ -104,6 +104,7 @@ namespace LibrarySystem.Controllers
 
         public async Task<IActionResult> LastBookISBN()
         {
+            if (!IsAdmin()) return RedirectToAction("Login", "Student");
             var lastBook = await _db.Books
                 .OrderByDescending((Book b) => b.BookID)
                 .FirstOrDefaultAsync();
@@ -187,7 +188,12 @@ namespace LibrarySystem.Controllers
             if (existing != null)
             {
                 TempData["Error"] = $"Student '{student.UniversityID}' already exists!";
-                return View("AdminAddStudent", student);
+                return View(student);
+            }
+
+            if (!string.IsNullOrEmpty(student.PasswordHash))
+            {
+                student.PasswordHash = LibraryService.HashPassword(student.PasswordHash);
             }
 
             student.IsActive = true;
@@ -210,7 +216,6 @@ namespace LibrarySystem.Controllers
             return View("AdminTransactions", txns);
         }
 
-     
         public async Task<IActionResult> Reports()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
@@ -236,7 +241,6 @@ namespace LibrarySystem.Controllers
             ViewBag.TotalReturned = await _db.Transactions.CountAsync(t => t.Status == "Returned");
             ViewBag.TotalOverdue = await _db.Transactions.CountAsync(t => t.Status == "Overdue" || (t.Status == "Active" && t.DueDate < DateTime.Now));
 
-          
             decimal historyPaidTotal = await _db.Transactions
                 .Where(t => t.Status == "Returned" && t.FineAmount > 0)
                 .SumAsync(t => t.FineAmount);
@@ -247,9 +251,9 @@ namespace LibrarySystem.Controllers
 
             decimal realTotalCalculated = historyPaidTotal + currentActiveTotal;
 
-            ViewBag.TotalFineCalculated = realTotalCalculated; 
-            ViewBag.TotalFinePaid = historyPaidTotal;        
-            ViewBag.TotalFineOutstanding = realTotalCalculated - historyPaidTotal; 
+            ViewBag.TotalFineCalculated = realTotalCalculated;
+            ViewBag.TotalFinePaid = historyPaidTotal;
+            ViewBag.TotalFineOutstanding = realTotalCalculated - historyPaidTotal;
 
             ViewBag.FineDetails = circulationLog
                 .Where(t => t.FineAmount > 0 || t.Status == "Overdue" || (t.Status == "Active" && t.DueDate < DateTime.Now))
@@ -261,14 +265,10 @@ namespace LibrarySystem.Controllers
         // GET: /Admin/ActivityLogs
         public async Task<IActionResult> ActivityLogs(string actionType = null)
         {
-            // Check user is admin or not (Session verification)
             var role = HttpContext.Session.GetString("Role");
             if (role != "Admin") return RedirectToAction("Login", "Student");
 
-            // Service se saare logs mangwa liye
             var logs = await _service.GetActivityLogsAsync(actionType, take: 200);
-
-            // Pass to the view
             return View(logs);
         }
 
@@ -281,7 +281,21 @@ namespace LibrarySystem.Controllers
             ViewBag.PopularBooks = await _service.GetMostBorrowedBooksAsync();
             ViewBag.PeakTimings = await _service.GetPeakIssuingTimingsAsync();
             ViewBag.FineTrends = await _service.GetFineTrendsAsync();
-            ViewBag.BatchStats = await _service.GetBatchWiseStatsAsync();
+
+            // 📊 ENHANCED ANALYTICS: Multi-cluster segmentation filtering by Department AND Batch
+            ViewBag.DepartmentStats = await _db.Transactions
+                .Include(t => t.Student)
+                .Where(t => t.Student != null)
+                .GroupBy(t => new { t.Student!.Department, t.Student!.Batch })
+                .Select(g => new {
+                    Department = g.Key.Department ?? "Computer Science",
+                    Batch = g.Key.Batch ?? "General Scope",
+                    TotalStudents = _db.Students.Count(s => s.Department == g.Key.Department && s.Batch == g.Key.Batch),
+                    TotalBorrows = g.Count(),
+                    AvgBorrows = Math.Round((double)g.Count() / (_db.Students.Count(s => s.Department == g.Key.Department && s.Batch == g.Key.Batch) == 0 ? 1 : _db.Students.Count(s => s.Department == g.Key.Department && s.Batch == g.Key.Batch)), 1)
+                })
+                .OrderBy(x => x.Department)
+                .ToListAsync();
 
             return View();
         }

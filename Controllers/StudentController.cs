@@ -1,4 +1,4 @@
-using LibrarySystem.Models;
+﻿using LibrarySystem.Models;
 using LibrarySystem.Services;
 using Microsoft.AspNetCore.Mvc;
 using LibrarySystem.Data;
@@ -26,8 +26,9 @@ namespace LibrarySystem.Controllers
             if (!ModelState.IsValid) return View(model);
 
             var hashedPassword = LibraryService.HashPassword(model.Password);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            // 1. Admin Login Check (Yeh pehle ki tarah database se direct check hoga)
+            // Admin check
             var admin = await _db.Admins.FirstOrDefaultAsync(
                 a => a.AdminID == model.UniversityID && a.PasswordHash == hashedPassword);
 
@@ -37,26 +38,34 @@ namespace LibrarySystem.Controllers
                 HttpContext.Session.SetString("StudentName", "Library Admin");
                 HttpContext.Session.SetString("Role", "Admin");
 
-                // Admin ke liye direct service ka log call kar dete hain
-                await _service.LogActivityAsync("LOGIN", admin.AdminID, "Library Admin", "Admin logged in successfully.");
+                await _service.LogActivityAsync("LOGIN", admin.AdminID, "Library Admin", "Admin login successful", ipAddress);
 
                 return RedirectToAction("Dashboard", "Admin");
             }
 
-            // 2. Student Login Check (Ab yeh hamari updated service se call hoga)
-            // Is ek line ke andar automatic valid/invalid/inactive har tarah ka log khud lag jayega!
-            var (success, message, student) = await _service.AuthenticateAsync(model.UniversityID, model.Password);
+            // Student check
+            var student = await _db.Students.FirstOrDefaultAsync(
+                s => s.UniversityID == model.UniversityID && s.PasswordHash == hashedPassword);
 
-            if (!success)
+            if (student == null)
             {
-                TempData["Error"] = message; // "Invalid credentials" ya "Inactive account" ka message khud aa jayega
+                await _service.LogActivityAsync("FAILED_ATTEMPT", model.UniversityID, null, "Login failed: Invalid credentials", ipAddress);
+                TempData["Error"] = "Invalid University ID or password.";
                 return View(model);
             }
 
-            // 3. Student Login Success (Sessions set karenge aur dashboard par bhej denge)
-            HttpContext.Session.SetString("UniversityID", student!.UniversityID);
+            if (!student.IsActive)
+            {
+                await _service.LogActivityAsync("FAILED_ATTEMPT", model.UniversityID, student.FullName, "Login failed: Inactive account", ipAddress);
+                TempData["Error"] = "Your account is inactive. Contact the library.";
+                return View(model);
+            }
+
+            HttpContext.Session.SetString("UniversityID", student.UniversityID);
             HttpContext.Session.SetString("StudentName", student.FullName);
             HttpContext.Session.SetString("Role", "Student");
+
+            await _service.LogActivityAsync("LOGIN", student.UniversityID, student.FullName, "Student login successful", ipAddress);
 
             return RedirectToAction("Dashboard");
         }
@@ -69,9 +78,17 @@ namespace LibrarySystem.Controllers
             var vm = await _service.GetDashboardAsync(uid);
             if (vm == null) return RedirectToAction("Login");
 
+            // 🎯 FORCE OVERDUE TRIGGER: Directly checking the IsOverdue property from your business logic
+            var overdueBooksList = vm.ActiveBooks != null
+                ? vm.ActiveBooks.Where(t => t.IsOverdue).ToList()
+                : new List<LibrarySystem.Models.Transaction>(); // Match with your transaction model namespace
+
+            ViewBag.OverdueNotifications = overdueBooksList.Select(t => new {
+                Message = "Book '" + (t.Book != null ? t.Book.Title : "Library Book") + "' is Overdue! It was due on " + t.DueDate.ToString("dd MMM yyyy") + ". Please return it to stop fine accumulation."
+            }).ToList();
+
             return View(vm);
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Return(string txnCode)

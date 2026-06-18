@@ -1,7 +1,12 @@
-using LibrarySystem.Data;
+﻿using LibrarySystem.Data;
 using LibrarySystem.Services;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var appSettingsPath = Path.Combine(AppContext.BaseDirectory.Split(new string[] { "\\bin\\" }, StringSplitOptions.None)[0], "appsettings.json");
 
@@ -23,6 +28,42 @@ if (!File.Exists(appSettingsPath))
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 🛡️ SECURITY REGISTRY: API Throttling (Rate Limiting) Configuration
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 20,              // 1 minute mein maximum 20 requests allowed hain
+                Window = TimeSpan.FromMinutes(1)
+            }));
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+// 🛡️ SECURITY REGISTRY: JWT Authentication Setup for Microservices
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = "ScanexusEngine",
+        ValidAudience = "ScanexusStudents",
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Scanexus_Secure_Enterprise_Secret_Key_2026_JWT"))
+    };
+});
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddControllers();
@@ -52,7 +93,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
+
+// 🛡️ SECURITY MIDDLEWARES: Safe intercept pipelines
+app.UseRateLimiter();
+app.UseAuthentication();   // 🔐 Token Check validation structure
 app.UseSession();
 app.UseAuthorization();
 

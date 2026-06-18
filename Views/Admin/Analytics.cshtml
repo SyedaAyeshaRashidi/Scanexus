@@ -1,4 +1,5 @@
-﻿@{
+﻿@model LibrarySystem.Models.DashboardViewModel
+@{
     ViewData["Title"] = "Analytics";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 
@@ -6,7 +7,9 @@
     var popularBooks = (List<(string Title, string Author, int Count)>)ViewBag.PopularBooks;
     var peakTimings = (List<(int Hour, int Count)>)ViewBag.PeakTimings;
     var fineTrends = (List<(string Month, decimal TotalFine)>)ViewBag.FineTrends;
-    var batchStats = (List<(string Batch, int StudentCount, int TotalBorrows)>)ViewBag.BatchStats;
+
+    // 📊 MULTI-CLUSTER COUPLING: Dynamic data stream binding matching updated controller
+    var departmentStats = ViewBag.DepartmentStats;
 }
 
 @section Styles {
@@ -24,10 +27,11 @@
             }
 
             .page-header p {
-                color: #64748b;
+                color: #cbd5e1 !important;
                 font-size: 0.85rem;
                 margin: 4px 0 0;
                 font-weight: 500;
+                opacity: 0.9;
             }
 
         .section-card {
@@ -80,6 +84,7 @@
                 border-color: rgba(255, 255, 255, 0.05);
                 padding: 0.9rem 1.4rem;
                 font-weight: 600;
+                text-align: left;
             }
 
             .table tbody td {
@@ -88,10 +93,12 @@
                 vertical-align: middle;
                 font-size: 0.9rem;
                 background: transparent;
+                color: #cbd5e1;
+                text-align: left;
             }
 
             .table tbody tr:hover td {
-                background: rgba(255, 255, 255, 0.02);
+                background: rgba(255, 255, 255, 0.02) !important;
                 color: #fff;
             }
 
@@ -157,13 +164,12 @@
 </div>
 
 <div class="row g-4">
-    <!-- Most Active Students -->
     <div class="col-lg-6">
         <div class="section-card">
             <div class="section-header">
                 <div class="section-title"><i class="bi bi-person-check-fill"></i> Most Active Students</div>
             </div>
-            @if (!mostActive.Any())
+            @if (mostActive == null || !mostActive.Any())
             {
                 <div class="empty-row"><i class="bi bi-people"></i>No borrowing activity yet.</div>
             }
@@ -197,7 +203,6 @@
         </div>
     </div>
 
-    <!-- Popular Books -->
     <div class="col-lg-6">
         <div class="section-card">
             <div class="section-header">
@@ -209,7 +214,6 @@
         </div>
     </div>
 
-    <!-- Peak Issuing Timings -->
     <div class="col-lg-6">
         <div class="section-card">
             <div class="section-header">
@@ -221,7 +225,6 @@
         </div>
     </div>
 
-    <!-- Fine Trends -->
     <div class="col-lg-6">
         <div class="section-card">
             <div class="section-header">
@@ -233,32 +236,37 @@
         </div>
     </div>
 
-    <!-- Batch-wise Stats -->
     <div class="col-12">
         <div class="section-card">
             <div class="section-header">
-                <div class="section-title"><i class="bi bi-diagram-3-fill"></i> Batch-wise Statistics</div>
+                <div class="section-title"><i class="bi bi-building-fill"></i> Department-wise Statistics</div>
             </div>
-            @if (!batchStats.Any())
+            @if (departmentStats == null)
             {
-                <div class="empty-row"><i class="bi bi-bar-chart"></i>No student batch data available.</div>
+                <div class="empty-row"><i class="bi bi-bar-chart"></i>No student department data available.</div>
             }
             else
             {
                 <div class="table-responsive">
                     <table class="table align-middle">
                         <thead>
-                            <tr><th>Batch</th><th>Total Students</th><th>Total Borrows</th><th>Avg Borrows / Student</th></tr>
+                            <tr>
+                                <th>Department</th>
+                                <th>Batch</th>
+                                <th>Total Students</th>
+                                <th>Total Borrows</th>
+                                <th>Avg Borrows / Student</th>
+                            </tr>
                         </thead>
                         <tbody>
-                            @foreach (var b in batchStats)
+                            @foreach (var item in departmentStats)
                             {
-                                double avg = b.StudentCount > 0 ? (double)b.TotalBorrows / b.StudentCount : 0;
                                 <tr>
-                                    <td><span class="student-name">@b.Batch</span></td>
-                                    <td><span style="color:#94a3b8;">@b.StudentCount</span></td>
-                                    <td><span class="borrow-badge">@b.TotalBorrows</span></td>
-                                    <td><span style="color:#94a3b8;">@avg.ToString("0.0")</span></td>
+                                    <td><span class="student-name">@item.Department</span></td>
+                                    <td><span style="color: #a5b4fc;" class="fw-semibold">@item.Batch</span></td>
+                                    <td><span style="color:#cbd5e1;">@item.TotalStudents</span></td>
+                                    <td><span class="borrow-badge">@item.TotalBorrows</span></td>
+                                    <td><span style="color:#94a3b8;">@item.AvgBorrows.ToString("0.0")</span></td>
                                 </tr>
                             }
                         </tbody>
@@ -284,10 +292,25 @@
                 datasets: [{
                     label: 'Times Borrowed',
                     data: [@string.Join(",", popularBooks.Select(b => b.Count))],
-                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
-                    borderColor: '#3b82f6',
-                    borderWidth: 1,
-                    borderRadius: 6
+
+                    // 🎨 MATCHING AI THEME COLOR PALETTE (Glassmorphic translucent fills)
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.25)',  // Cyber Blue
+                        'rgba(168, 85, 247, 0.25)',  // Deep Purple
+                        'rgba(236, 72, 153, 0.25)',  // Hot Pink
+                        'rgba(234, 179, 8, 0.25)',   // Electric Yellow
+                        'rgba(34, 197, 94, 0.25)'    // Neon Green
+                    ],
+                    borderColor: [
+                        '#60a5fa', // Blue solid border
+                        '#a855f7', // Purple solid border
+                        '#ec4899', // Pink solid border
+                        '#eab308', // Yellow solid border
+                        '#22c55e'  // Green solid border
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false
                 }]
             },
             options: {
@@ -334,9 +357,9 @@
                 datasets: [{
                     label: 'Fine Collected (Rs.)',
                     data: [@string.Join(",", fineTrends.Select(f => f.TotalFine))],
-                    backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.4)',
                     borderColor: '#ef4444',
-                    borderWidth: 1,
+                    borderWidth: 2,
                     borderRadius: 6
                 }]
             },

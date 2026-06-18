@@ -1,10 +1,13 @@
 ﻿using LibrarySystem.Models;
 using LibrarySystem.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace LibrarySystem.Controllers
 {
-  
     [Route("api/[controller]")]
     [ApiController]
     public class LibraryController : ControllerBase
@@ -12,6 +15,54 @@ namespace LibrarySystem.Controllers
         private readonly ILibraryService _service;
 
         public LibraryController(ILibraryService service) => _service = service;
+
+        // 🔐 MICROSERVICE AUTH GATEWAY: Dynamic token emitter for Swagger validation
+        [HttpPost("token")]
+        [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 401)]
+        public async Task<IActionResult> GenerateToken([FromBody] TokenLoginRequest model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid request payload." });
+
+            // Core integration check with existing ILibraryService provider
+            var (success, message, student) = await _service.AuthenticateAsync(model.UniversityID, model.Password);
+
+            if (!success || student == null)
+                return Unauthorized(new ApiResponse<object> { Success = false, Message = "API Identity verification failed: " + message });
+
+            // Generate claims based on real DB values retrieved
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, student.UniversityID),
+                new Claim(ClaimTypes.Role, student.UniversityID.ToLower().Contains("admin") ? "Admin" : "Student"),
+                new Claim("FullName", student.FullName ?? "Academic Entity"),
+                new Claim("Semester", student.Semester.ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Scanexus_Secure_Enterprise_Secret_Key_2026_JWT"));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: "ScanexusEngine",
+                audience: "ScanexusStudents",
+                claims: claims,
+                expires: DateTime.Now.AddHours(2),
+                signingCredentials: creds
+            );
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "JWT Bearer Token issued successfully.",
+                Data = new
+                {
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    Expiration = token.ValidTo,
+                    Profile = new { student.UniversityID, student.FullName }
+                }
+            });
+        }
 
         [HttpPost("login")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
@@ -63,7 +114,7 @@ namespace LibrarySystem.Controllers
                     txn!.TxnCode,
                     txn.IssueDate,
                     txn.DueDate,
-                    BookTitle  = txn.Book?.Title,
+                    BookTitle = txn.Book?.Title,
                     BookAuthor = txn.Book?.Author,
                     StudentName = txn.Student?.FullName
                 }
@@ -129,7 +180,7 @@ namespace LibrarySystem.Controllers
                     ActiveBooks = dashboard.ActiveBooks.Select(t => new
                     {
                         t.TxnCode,
-                        BookTitle  = t.Book?.Title,
+                        BookTitle = t.Book?.Title,
                         BookAuthor = t.Book?.Author,
                         t.IssueDate,
                         t.DueDate,
@@ -139,7 +190,7 @@ namespace LibrarySystem.Controllers
                     History = dashboard.History.Select(t => new
                     {
                         t.TxnCode,
-                        BookTitle  = t.Book?.Title,
+                        BookTitle = t.Book?.Title,
                         t.IssueDate,
                         t.ReturnDate,
                         t.Status
@@ -183,9 +234,9 @@ namespace LibrarySystem.Controllers
             {
                 t.TxnCode,
                 t.Status,
-                StudentID   = t.Student?.UniversityID,
+                StudentID = t.Student?.UniversityID,
                 StudentName = t.Student?.FullName,
-                BookTitle   = t.Book?.Title,
+                BookTitle = t.Book?.Title,
                 t.IssueDate,
                 t.DueDate,
                 t.ReturnDate
@@ -193,7 +244,7 @@ namespace LibrarySystem.Controllers
 
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
         }
-       
+
         [HttpPost("return-by-qr")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
@@ -210,7 +261,6 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = message });
         }
 
-       
         [HttpGet("defaulters")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         public async Task<IActionResult> GetDefaulters()
@@ -230,7 +280,6 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
         }
 
-       
         [HttpGet("fine-summary")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         public async Task<IActionResult> GetFineSummary()
@@ -258,7 +307,6 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
         }
 
-        
         [HttpGet("today-transactions")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         public async Task<IActionResult> GetTodayTransactions()
@@ -277,7 +325,6 @@ namespace LibrarySystem.Controllers
             return Ok(new ApiResponse<object> { Success = true, Message = "OK", Data = data });
         }
 
-        
         [HttpGet("inventory-status")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         public async Task<IActionResult> GetInventoryStatus()
@@ -295,5 +342,12 @@ namespace LibrarySystem.Controllers
                 }
             });
         }
+    }
+
+    // Dynamic clean request model mapping endpoint parameters safely
+    public class TokenLoginRequest
+    {
+        public string UniversityID { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

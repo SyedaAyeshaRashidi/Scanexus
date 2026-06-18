@@ -40,6 +40,8 @@ namespace LibrarySystem.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+
+        public string? Department { get; set; }
     }
 
     public class Admin
