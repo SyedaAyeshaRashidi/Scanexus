@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.ML.Data;
 
 namespace LibrarySystem.Models
 {
     public class Student
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int StudentID { get; set; }
 
         [Required, StringLength(20)]
@@ -86,6 +87,22 @@ namespace LibrarySystem.Models
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 
+    public class BookBorrowEvent
+    {
+        [KeyType(count: 10000)]
+        public uint StudentKey { get; set; }
+
+        [KeyType(count: 10000)]
+        public uint BookKey { get; set; }
+
+        public float Label { get; set; }
+    }
+
+    public class BookPrediction
+    {
+        public float Score { get; set; }
+    }
+
     public class Transaction
     {
         [Key]
@@ -119,8 +136,8 @@ namespace LibrarySystem.Models
         [NotMapped]
         public bool IsOverdue => (Status == "Active" || Status == "Overdue") && DueDate < DateTime.Now;
 
-        public decimal FineAmount { get; set; } = 0; 
-        public bool FinePaid { get; set; } = false;   
+        public decimal FineAmount { get; set; } = 0;
+        public bool FinePaid { get; set; } = false;
 
         [NotMapped]
         public int OverdueDays
@@ -198,6 +215,7 @@ namespace LibrarySystem.Models
         [Required]
         public string QRCode { get; set; } = string.Empty;
     }
+
     public class ReturnByQRRequest
     {
         [Required] public string ReturnQrCode { get; set; } = string.Empty;
@@ -226,6 +244,4 @@ namespace LibrarySystem.Models
 
         public DateTime Timestamp { get; set; } = DateTime.Now;
     }
-
-
 }

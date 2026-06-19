@@ -3,6 +3,9 @@ using LibrarySystem.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.ML;
+using Microsoft.ML.Data;
+using Microsoft.ML.Trainers;
 
 namespace LibrarySystem.Services
 {
@@ -34,6 +37,26 @@ namespace LibrarySystem.Services
         Task<List<(int Hour, int Count)>> GetPeakIssuingTimingsAsync();
         Task<List<(string Month, decimal TotalFine)>> GetFineTrendsAsync();
         Task<List<(string Batch, int StudentCount, int TotalBorrows)>> GetBatchWiseStatsAsync();
+
+        // 📦 Quick stock adjustment contract signature
+        Task<(bool Success, string Message)> AddBookCopiesAsync(int bookId, int additionalCopies);
+    }
+
+    // 🧠 ML.NET INTERNAL STRUCTURAL CLASSES
+    public class BookBorrowEvent
+    {
+        [KeyType(count: 10000)]
+        public uint StudentKey { get; set; }
+
+        [KeyType(count: 10000)]
+        public uint BookKey { get; set; }
+
+        public float Label { get; set; }
+    }
+
+    public class BookPrediction
+    {
+        public float Score { get; set; }
     }
 
     public class LibraryService : ILibraryService
@@ -331,13 +354,14 @@ namespace LibrarySystem.Services
 
         public async Task<List<(string Title, string Author, int Count)>> GetMostBorrowedBooksAsync()
         {
-            return await _db.Transactions
+            var data = await _db.Transactions
                 .GroupBy(t => new { t.Book!.Title, t.Book.Author })
                 .Select(g => new { g.Key.Title, g.Key.Author, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
                 .Take(10)
-                .Select(g => ValueTuple.Create(g.Title, g.Author, g.Count))
                 .ToListAsync();
+
+            return data.Select(g => (g.Title, g.Author, g.Count)).ToList();
         }
 
         public async Task<List<Transaction>> GetCirculationLogAsync(DateTime? from, DateTime? to)
@@ -414,43 +438,90 @@ namespace LibrarySystem.Services
             return $"TXN-{datePart}-{rand}";
         }
 
-        // ✅ PERFECTLY FIXED CODESPACE: Compiles perfectly without anonymous type Razor crashes
+
+        // ===================================================
+        // 🧠 ML.NET TRUE DYNAMIC CORE RECOMMENDATION MATRIX ENGINE (FIXED)
+        // ===================================================
         public async Task<List<Book>> GetAIRecommendationsAsync(string universityId)
         {
-            var allBooks = await _db.Books.ToListAsync();
-            var strategicRecommendations = new List<Book>();
-
-            // Course 1: Database Engineering Pathway
-            var dbBook = allBooks.FirstOrDefault(b => b.Title.Contains("Database", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("SQL", StringComparison.OrdinalIgnoreCase));
-            if (dbBook != null) strategicRecommendations.Add(dbBook);
-
-            // Course 2: Computer Networks
-            var netBook = allBooks.FirstOrDefault(b => b.Title.Contains("Network", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Communication", StringComparison.OrdinalIgnoreCase));
-            if (netBook != null) strategicRecommendations.Add(netBook);
-
-            // Course 3: Software Architecture
-            var designBook = allBooks.FirstOrDefault(b => b.Title.Contains("Design", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Pattern", StringComparison.OrdinalIgnoreCase));
-            if (designBook != null) strategicRecommendations.Add(designBook);
-
-            // Course 4: Core Automata (Strict Match - No generic C language)
-            var automataBook = allBooks.FirstOrDefault(b => b.Title.Contains("Automata", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Formal Language", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Compiler", StringComparison.OrdinalIgnoreCase));
-            if (automataBook != null) strategicRecommendations.Add(automataBook);
-
-            // Dynamic Check: Agar user koi Medical book add kare toh uska recommendation node
-            var medicalBook = allBooks.FirstOrDefault(b => b.Title.Contains("Medical", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Clinical", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Health", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Anatomy", StringComparison.OrdinalIgnoreCase));
-            if (medicalBook != null) strategicRecommendations.Add(medicalBook);
-
-            var codingBook = allBooks.FirstOrDefault(b => b.Title.Contains("Programming", StringComparison.OrdinalIgnoreCase) || b.Title.Contains("Algorithm", StringComparison.OrdinalIgnoreCase));
-            if (codingBook != null) strategicRecommendations.Add(codingBook);
-
-            // Safe fallback agar books kam hon database mein
-            if (!strategicRecommendations.Any())
+            try
             {
-                strategicRecommendations = allBooks.Take(4).ToList();
-            }
+                var allBooks = await _db.Books.ToListAsync();
 
-            return strategicRecommendations.Distinct().ToList();
+                // 🛠️ FIX 1: Eager load Student navigation property to access UniversityID
+                var allTransactions = await _db.Transactions.Include(t => t.Student).ToListAsync();
+
+                if (!allTransactions.Any() || !allBooks.Any())
+                {
+                    return allBooks.Take(3).ToList();
+                }
+
+                // 1. Structural ML Dataset Parsing Configuration
+                var trainingData = allTransactions
+                    .Where(t => t.Student != null) // Safe check
+                    .Select(t => new BookBorrowEvent
+                    {
+                        // 🛠️ FIX 2: Use t.Student.UniversityID instead of t.UniversityID
+                        StudentKey = (uint)Math.Abs(t.Student!.UniversityID.GetHashCode() % 10000),
+                        BookKey = (uint)Math.Abs(t.BookID.GetHashCode() % 10000),
+                        Label = 1.0f
+                    }).ToList();
+
+                var mlContext = new MLContext();
+                var trainDataView = mlContext.Data.LoadFromEnumerable(trainingData);
+
+                // 2. Machine Learning Collaborative Filtering Pipelines Setup
+                var options = new MatrixFactorizationTrainer.Options
+                {
+                    MatrixColumnIndexColumnName = nameof(BookBorrowEvent.StudentKey),
+                    MatrixRowIndexColumnName = nameof(BookBorrowEvent.BookKey),
+                    LabelColumnName = nameof(BookBorrowEvent.Label),
+                    NumberOfIterations = 20,
+                    ApproximationRank = 32
+                };
+
+                var pipeline = mlContext.Recommendation().Trainers.MatrixFactorization(options);
+                var model = pipeline.Fit(trainDataView);
+                var predictionEngine = mlContext.Model.CreatePredictionEngine<BookBorrowEvent, BookPrediction>(model);
+
+                // 3. User Specific Isolation Metrics
+                var currentStudentHistory = allTransactions
+                    .Where(t => t.Student != null && t.Student.UniversityID == universityId) // 🛠️ FIX 3: Updated here as well
+                    .Select(t => t.BookID)
+                    .ToList();
+
+                var unreadBooks = allBooks.Where(b => !currentStudentHistory.Contains(b.BookID)).ToList();
+                var targetStudentKey = (uint)Math.Abs(universityId.GetHashCode() % 10000);
+
+                // 4. Compute Predictive Match Scores
+                var scoredRecommendations = unreadBooks.Select(book => new
+                {
+                    Book = book,
+                    Prediction = predictionEngine.Predict(new BookBorrowEvent
+                    {
+                        StudentKey = targetStudentKey,
+                        BookKey = (uint)Math.Abs(book.BookID.GetHashCode() % 10000)
+                    })
+                })
+                .OrderByDescending(r => r.Prediction.Score)
+                .Take(3)
+                .Select(r => r.Book)
+                .ToList();
+
+                if (!scoredRecommendations.Any())
+                {
+                    return allBooks.Take(3).ToList();
+                }
+
+                return scoredRecommendations;
+            }
+            catch
+            {
+                return await _db.Books.Take(3).ToListAsync();
+            }
         }
+
+
         // Activity Logging
         // ──────────────────────────────────────────────
         public async Task LogActivityAsync(string actionType, string? userId, string? userName, string? details, string? ipAddress = null)
@@ -467,6 +538,7 @@ namespace LibrarySystem.Services
             _db.ActivityLogs.Add(log);
             await _db.SaveChangesAsync();
         }
+
 
         public async Task<List<ActivityLog>> GetActivityLogsAsync(string? actionType = null, int take = 100)
         {
@@ -486,13 +558,14 @@ namespace LibrarySystem.Services
 
         public async Task<List<(string FullName, string UniversityID, int BorrowCount)>> GetMostActiveStudentsAsync()
         {
-            return await _db.Transactions
+            var data = await _db.Transactions
                 .GroupBy(t => new { t.Student!.FullName, t.Student.UniversityID })
                 .Select(g => new { g.Key.FullName, g.Key.UniversityID, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
                 .Take(10)
-                .Select(g => ValueTuple.Create(g.FullName, g.UniversityID, g.Count))
                 .ToListAsync();
+
+            return data.Select(g => (g.FullName, g.UniversityID, g.Count)).ToList();
         }
 
         public async Task<List<(int Hour, int Count)>> GetPeakIssuingTimingsAsync()
@@ -541,6 +614,28 @@ namespace LibrarySystem.Services
                 .ToList();
 
             return result;
+        }
+
+        // 📦 QUICK STOCK UPDATE TRANSACTION ENGINE METHOD
+        public async Task<(bool Success, string Message)> AddBookCopiesAsync(int bookId, int additionalCopies)
+        {
+            if (additionalCopies <= 0)
+                return (false, "Please enter a valid number of copies.");
+
+            var book = await _db.Books.FindAsync(bookId);
+            if (book == null)
+                return (false, "Book not found.");
+
+            // Increment database tracking inventory arrays concurrently
+            book.TotalCopies += additionalCopies;
+            book.AvailableCopies += additionalCopies;
+
+            await _db.SaveChangesAsync();
+
+            // Track state via standard internal activity auditing log
+            await LogActivityAsync("INVENTORY_UPDATE", null, "Admin", $"Added {additionalCopies} copies to '{book.Title}' (ID: {bookId})");
+
+            return (true, $"Successfully added {additionalCopies} copies to '{book.Title}'.");
         }
     }
 }

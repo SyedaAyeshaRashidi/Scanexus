@@ -17,7 +17,7 @@ namespace LibrarySystem.Controllers
 
             var books = await _service.GetAllBooksAsync();
 
-            // 🔥 VIEW_BAG HOOK: AI engine directly matching data lists for current active views
+            // 🧠 Dynamic AI trigger linked seamlessly to your ML.NET service implementation
             ViewBag.AIRecommendations = await _service.GetAIRecommendationsAsync(uid);
 
             return View(books);

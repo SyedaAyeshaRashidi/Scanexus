@@ -102,6 +102,20 @@ namespace LibrarySystem.Controllers
             return RedirectToAction("Books");
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddCopies(int bookId, int additionalCopies)
+        {
+            var (success, message) = await _service.AddBookCopiesAsync(bookId, additionalCopies);
+
+            if (success)
+                TempData["Success"] = message;
+            else
+                TempData["Error"] = message;
+
+            return RedirectToAction("Books"); 
+        }
+
         public async Task<IActionResult> LastBookISBN()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
@@ -262,7 +276,7 @@ namespace LibrarySystem.Controllers
             return View("AdminReports");
         }
 
-        // GET: /Admin/ActivityLogs
+  
         public async Task<IActionResult> ActivityLogs(string actionType = null)
         {
             var role = HttpContext.Session.GetString("Role");
@@ -272,7 +286,7 @@ namespace LibrarySystem.Controllers
             return View(logs);
         }
 
-        // GET: /Admin/Analytics
+
         public async Task<IActionResult> Analytics()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Student");
@@ -282,7 +296,6 @@ namespace LibrarySystem.Controllers
             ViewBag.PeakTimings = await _service.GetPeakIssuingTimingsAsync();
             ViewBag.FineTrends = await _service.GetFineTrendsAsync();
 
-            // 📊 ENHANCED ANALYTICS: Multi-cluster segmentation filtering by Department AND Batch
             ViewBag.DepartmentStats = await _db.Transactions
                 .Include(t => t.Student)
                 .Where(t => t.Student != null)

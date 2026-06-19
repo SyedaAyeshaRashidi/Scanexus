@@ -223,6 +223,10 @@
             padding: 2.5rem 1rem;
             color: #475569;
             font-size: 0.82rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
 
             .qr-locked i {
@@ -258,6 +262,7 @@
         @@keyframes modalFadeIn {
             from {
                 opacity: 0;
+                transform: scale(0.95);
                 transform: scale(0.95);
             }
 
@@ -324,7 +329,7 @@
 
                 .receipt-row .value.txn {
                     color: #60a5fa;
-                    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
                     font-size: 0.85rem;
                 }
 
@@ -349,7 +354,7 @@
 
             .btn-done:hover {
                 opacity: 0.95;
-                scale: 0.99;
+                transform: scale(0.99);
             }
 
         .scanner-modal-content {
@@ -382,13 +387,6 @@
             display: flex;
             align-items: center;
         }
-
-        #aiCardSearch:focus {
-            background: rgba(15, 23, 42, 0.9) !important;
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.3) !important;
-            outline: none;
-        }
     </style>
 }
 
@@ -419,7 +417,7 @@
                 </div>
                 <div class="receipt-row">
                     <span class="label">Return Deadline</span>
-                    <span class="value due">@receipt.GetProperty("DueDate").GetString()</span>
+                    <span class="value tenderness due">@receipt.GetProperty("DueDate").GetString()</span>
                 </div>
             </div>
             <button class="btn-done" onclick="document.getElementById('receiptModal').remove()">Dismiss Voucher</button>
@@ -515,6 +513,62 @@
     <div class="alert-e"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]</div>
 }
 
+<!-- 🧠 DYNAMIC ML.NET AI RECOMMENDATION MATRIX VIEW ROW -->
+@if (ViewBag.AIRecommendations != null && ((List<LibrarySystem.Models.Book>)ViewBag.AIRecommendations).Any())
+{
+    var aiBooksList = (List<LibrarySystem.Models.Book>)ViewBag.AIRecommendations;
+
+    // 🎨 UI Aesthetic Theme Color Maps (Matching your AI palette constraints)
+    string[] backColors = { "rgba(59, 130, 246, 0.04)", "rgba(168, 85, 247, 0.04)", "rgba(236, 72, 153, 0.04)" };
+    string[] borderColors = { "rgba(59, 130, 246, 0.15)", "rgba(168, 85, 247, 0.15)", "rgba(236, 72, 153, 0.15)" };
+    string[] textColors = { "#60a5fa", "#c084fc", "#f472b6" };
+    string[] badgeBacks = { "rgba(59, 130, 246, 0.1)", "rgba(168, 85, 247, 0.1)", "rgba(236, 72, 153, 0.1)" };
+
+    <div class="mb-5" style="background: rgba(11, 11, 30, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 1.8rem;">
+        <h5 class="text-white fw-bold mb-4 d-flex align-items-center gap-2" style="font-size: 1.1rem; letter-spacing: -0.2px;">
+            <i class="bi bi-stars" style="color: #a855f7; font-size: 1.2rem;"></i> Recommended for You
+        </h5>
+
+        <div class="row g-4">
+            @for (int i = 0; i < aiBooksList.Count; i++)
+            {
+                var aiBook = aiBooksList[i];
+                int colorIdx = i % 3;
+
+                <div class="col-md-4">
+                    <div class="p-4 h-100 d-flex flex-column justify-content-between book-card-ai"
+                         style="background: @backColors[colorIdx]; border: 1px solid @borderColors[colorIdx]; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); transition: all 0.25s ease; cursor: pointer;"
+                         onclick="openBookDetail('@aiBook.QRCode', '@aiBook.Title.Replace("'", "\\'")', '@aiBook.Author.Replace("'", "\\'")')"
+                         onmouseover="this.style.borderColor='@textColors[colorIdx]'; this.style.transform='translateY(-3px)'"
+                         onmouseout="this.style.borderColor='@borderColors[colorIdx]'; this.style.transform='none'">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <span class="badge" style="background: @badgeBacks[colorIdx]; color: @textColors[colorIdx]; border: 1px solid @borderColors[colorIdx]; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 5px 10px; border-radius: 6px;">
+                                    Suggested Reading
+                                </span>
+                                <i class="bi bi-cpu text-muted opacity-25" style="font-size: 1.1rem; color: @textColors[colorIdx] !important;"></i>
+                            </div>
+
+                            <div class="fw-bold text-white mb-1" style="font-size: 1.05rem; line-height: 1.4; letter-spacing: -0.2px;">@aiBook.Title</div>
+                            <div style="color: #94a3b8; font-size: 0.85rem; font-weight: 500;">By @aiBook.Author</div>
+                        </div>
+
+                        <div class="mt-4 pt-3 d-flex justify-content-between align-items-center" style="border-top: 1px solid rgba(255,255,255,0.04);">
+                            <span class="d-flex align-items-center gap-2 small fw-semibold" style="color: #4ade80; font-size: 0.8rem;">
+                                <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; display: inline-block; filter: drop-shadow(0 0 4px #22c55e);"></span> Available
+                            </span>
+                            <span class="small fw-bold text-primary d-flex align-items-center gap-1" style="color: @textColors[colorIdx] !important; font-size: 0.85rem;">
+                                Quick Open <i class="bi bi-chevron-right" style="font-size: 0.75rem;"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- MAIN CATALOG GRID -->
 <div class="row g-4 mb-5">
     @foreach (var book in Model)
     {
@@ -537,102 +591,12 @@
                 }
                 else
                 {
-
                     <span class="status-pill status-unavailable">OUT OF STOCK</span>
                 }
             </div>
         </div>
     }
 </div>
-
-
-<div class="mt-5 pt-5 mb-5" style="font-family: 'Segoe UI', Roboto, sans-serif; border-top: 1px solid rgba(255,255,255,0.06);">
-
-    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
-        <div class="d-flex align-items-center">
-            <div class="p-2 rounded-3 me-3" style="background-color: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.3);">
-                <i class="bi bi-cpu-fill" style="font-size: 1.4rem; color: #3b82f6 !important;"></i>
-            </div>
-            <div>
-                <h5 style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin: 0;">AI Academic Curriculum Recommendation Engine</h5>
-                <p style="color: #cbd5e1 !important; font-size: 0.9rem; margin: 2px 0 0; font-weight: 400; opacity: 0.95;">Cross-referencing live catalog objects with core University course streams</p>
-            </div>
-        </div>
-
-        <div class="position-relative" style="min-width: 320px;">
-            <input type="text" id="aiCardSearch" class="form-control text-white" placeholder="Search by subject / course (e.g., DSA)..."
-                   style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 10px; padding: 10px 15px; font-size: 0.9rem; font-weight: 500; transition: all 0.3s;"
-                   onkeyup="filterAiCards()">
-        </div>
-    </div>
-
-    <div class="row" id="aiCardsContainer">
-        @if (Model != null && Model.Any())
-        {
-            foreach (var book in Model)
-            {
-                string courseName = "";
-                string streamColor = "";
-                string searchKeywords = "";
-                bool isMatched = false;
-
-                if (book.Title.Contains("Database", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("SQL", StringComparison.OrdinalIgnoreCase))
-                {
-                    courseName = "Database Management Systems"; streamColor = "#ef4444"; searchKeywords = "database db sql systems"; isMatched = true;
-                }
-                else if (book.Title.Contains("Network", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Communication", StringComparison.OrdinalIgnoreCase))
-                {
-                    courseName = "Computer Networking & Infosec"; streamColor = "#10b981"; searchKeywords = "network networking infosec communication ccna"; isMatched = true;
-                }
-                else if (book.Title.Contains("Design", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Pattern", StringComparison.OrdinalIgnoreCase))
-                {
-                    courseName = "Software Architecture Models"; streamColor = "#a855f7"; searchKeywords = "design pattern architecture software models"; isMatched = true;
-                }
-                else if (book.Title.Contains("Automata", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Computation", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Compiler", StringComparison.OrdinalIgnoreCase))
-                {
-                    courseName = "Theory of Automata & Languages"; streamColor = "#eab308"; searchKeywords = "automata computation compiler languages toc"; isMatched = true;
-                }
-                else if (book.Title.Contains("Programming", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Algorithm", StringComparison.OrdinalIgnoreCase))
-                {
-                    courseName = "Data Structures & Algorithms"; streamColor = "#3b82f6"; searchKeywords = "dsa data structures algorithms programming c++ c java"; isMatched = true;
-                }
-                else if (book.Title.Contains("Medical", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Clinical", StringComparison.OrdinalIgnoreCase) || book.Title.Contains("Health", StringComparison.OrdinalIgnoreCase))
-                {
-                    courseName = "Medical Sciences & Therapeutics"; streamColor = "#06b6d4"; searchKeywords = "medical clinical health therapeutics anatomy medicine"; isMatched = true;
-                }
-
-                if (isMatched)
-                {
-                    <div class="col-xl-3 col-md-6 mb-4 ai-recommendation-card" data-keywords="@searchKeywords @book.Title.ToLower() @book.Author.ToLower()">
-                        <div class="card h-100 border-0" style="background: #0b0f19; border: 1px solid rgba(255,255,255,0.06) !important; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 25px rgba(0,0,0,0.5); transition: all 0.3s ease;" onmouseover="this.style.borderColor='@streamColor'; this.style.transform='translateY(-4px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'; this.style.transform='none';">
-
-                            <div style="height: 4px; background: @streamColor;"></div>
-
-                            <div class="card-body p-4 pt-4 d-flex flex-column justify-content-between">
-                                <div>
-                                    <div style="color: #94a3b8 !important; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px;">COURSE</div>
-                                    <h5 style="color: #ffffff; font-weight: 800; font-size: 1.2rem; line-height: 1.3; margin-bottom: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">@courseName</h5>
-
-                                    <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-                                        <div style="color: @streamColor; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px;">RECOMMENDED BOOK</div>
-                                        <div class="text-white font-weight-bold" style="font-size: 0.95rem; line-height: 1.4; color: #ffffff !important;">@book.Title</div>
-                                        <div style="color: #cbd5e1 !important; font-size: 0.8rem; font-weight: 500; margin-top: 6px;">by @book.Author</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-            }
-        }
-    </div>
-
-    <div id="aiNoResults" class="text-center py-5 rounded-3 d-none" style="background: rgba(11, 11, 30, 0.4); border: 1px solid rgba(255,255,255,0.05);">
-        <i class="bi bi-exclamation-triangle text-warning fa-2x mb-2 d-block"></i>
-        <p class="text-muted m-0">No contextually matching academic course nodes found.</p>
-    </div>
-</div>
-
 
 @section Scripts {
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -746,29 +710,6 @@
 
         function stopScanner() {
             if (scanner) { scanner.stop().catch(function () {}); scanner = null; }
-        }
-
-        function filterAiCards() {
-            let input = document.getElementById('aiCardSearch').value.toLowerCase().trim();
-            let cards = document.getElementsByClassName('ai-recommendation-card');
-            let visibleCount = 0;
-
-            for (let i = 0; i < cards.length; i++) {
-                let keywords = cards[i].getAttribute('data-keywords');
-                if (keywords.includes(input)) {
-                    cards[i].style.display = "";
-                    visibleCount++;
-                } else {
-                    cards[i].style.display = "none";
-                }
-            }
-
-            let noResults = document.getElementById('aiNoResults');
-            if (visibleCount === 0) {
-                noResults.classList.remove('d-none');
-            } else {
-                noResults.classList.add('d-none');
-            }
         }
     </script>
 }

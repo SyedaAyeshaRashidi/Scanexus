@@ -16,7 +16,7 @@ namespace LibrarySystem.Controllers
 
         public LibraryController(ILibraryService service) => _service = service;
 
-        // 🔐 MICROSERVICE AUTH GATEWAY: Dynamic token emitter for Swagger validation
+
         [HttpPost("token")]
         [ProducesResponseType(typeof(ApiResponse<object>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 401)]
@@ -24,14 +24,12 @@ namespace LibrarySystem.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid request payload." });
-
-            // Core integration check with existing ILibraryService provider
             var (success, message, student) = await _service.AuthenticateAsync(model.UniversityID, model.Password);
 
             if (!success || student == null)
                 return Unauthorized(new ApiResponse<object> { Success = false, Message = "API Identity verification failed: " + message });
 
-            // Generate claims based on real DB values retrieved
+      
             var claims = new[]
             {
                 new Claim(ClaimTypes.Name, student.UniversityID),
@@ -344,7 +342,7 @@ namespace LibrarySystem.Controllers
         }
     }
 
-    // Dynamic clean request model mapping endpoint parameters safely
+   
     public class TokenLoginRequest
     {
         public string UniversityID { get; set; } = string.Empty;

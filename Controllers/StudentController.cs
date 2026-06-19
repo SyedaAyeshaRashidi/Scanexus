@@ -28,7 +28,6 @@ namespace LibrarySystem.Controllers
             var hashedPassword = LibraryService.HashPassword(model.Password);
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            // Admin check
             var admin = await _db.Admins.FirstOrDefaultAsync(
                 a => a.AdminID == model.UniversityID && a.PasswordHash == hashedPassword);
 
@@ -43,7 +42,7 @@ namespace LibrarySystem.Controllers
                 return RedirectToAction("Dashboard", "Admin");
             }
 
-            // Student check
+         
             var student = await _db.Students.FirstOrDefaultAsync(
                 s => s.UniversityID == model.UniversityID && s.PasswordHash == hashedPassword);
 
@@ -78,10 +77,10 @@ namespace LibrarySystem.Controllers
             var vm = await _service.GetDashboardAsync(uid);
             if (vm == null) return RedirectToAction("Login");
 
-            // 🎯 FORCE OVERDUE TRIGGER: Directly checking the IsOverdue property from your business logic
+
             var overdueBooksList = vm.ActiveBooks != null
                 ? vm.ActiveBooks.Where(t => t.IsOverdue).ToList()
-                : new List<LibrarySystem.Models.Transaction>(); // Match with your transaction model namespace
+                : new List<LibrarySystem.Models.Transaction>(); 
 
             ViewBag.OverdueNotifications = overdueBooksList.Select(t => new {
                 Message = "Book '" + (t.Book != null ? t.Book.Title : "Library Book") + "' is Overdue! It was due on " + t.DueDate.ToString("dd MMM yyyy") + ". Please return it to stop fine accumulation."

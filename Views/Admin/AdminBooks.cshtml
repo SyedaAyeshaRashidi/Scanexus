@@ -184,6 +184,37 @@
                 border-color: #ef4444;
                 color: #ffffff;
             }
+
+        /* 🟢 QUICK ACTION STOCK STATE STYLE */
+        .btn-add-stock-quick {
+            background: rgba(16, 185, 129, 0.02);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #a7f3d0;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .btn-add-stock-quick:hover {
+                background: #10b981;
+                border-color: #10b981;
+                color: #ffffff;
+            }
+
+        .alert-s {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #a7f3d0;
+            border-radius: 12px;
+            padding: 0.85rem 1.2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
     </style>
 }
 
@@ -196,6 +227,15 @@
         <i class="bi bi-plus-lg"></i> Add New Book
     </a>
 </div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-s"><i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert-e"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]</div>
+}
 
 <div class="row analytics-summary-row g-4">
     <div class="col-md-4">
@@ -246,13 +286,21 @@
                             </div>
                         </td>
                         <td>
-                            <form asp-action="DeleteBook" method="post" style="display:inline; margin:0;">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@b.BookID" />
-                                <button class="btn-remove-destructive" type="submit" onclick="return confirm('Wipe @b.Title records?')">
-                                    <i class="bi bi-trash-fill me-1"></i> Remove
+                            <div class="d-flex align-items-center gap-2">
+                                <!-- 🟢 QUICK STOCK INCREMENT BUTTON -->
+                                <button type="button" class="btn-add-stock-quick"
+                                        onclick="openAddCopiesModal('@b.BookID', '@b.Title.Replace("'", "\\'")', '@b.AvailableCopies', '@b.TotalCopies')">
+                                    <i class="bi bi-plus-circle-fill me-1"></i> Add Copies
                                 </button>
-                            </form>
+
+                                <form asp-action="DeleteBook" method="post" style="display:inline; margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@b.BookID" />
+                                    <button class="btn-remove-destructive" type="submit" onclick="return confirm('Wipe @b.Title records?')">
+                                        <i class="bi bi-trash-fill me-1"></i> Remove
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -260,3 +308,79 @@
         </table>
     </div>
 </div>
+
+<!-- 📦 REFINED STYLISH STOCK INVENTORY MODAL (FIXED CONTRAST & VISIBILITY) -->
+<div class="modal fade" id="addCopiesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-white" style="background: #0b0f19; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+
+            <!-- Modal Header -->
+            <div class="modal-header border-0 p-4 pb-2 d-flex align-items-center justify-content-between">
+                <h5 class="fw-bold m-0 d-flex align-items-center gap-2" style="font-size: 1.15rem; letter-spacing: -0.3px;">
+                    <i class="bi bi-box-seam text-success" style="font-size: 1.25rem;"></i> Update Stock Inventory
+                </h5>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" style="font-size: 0.85rem;"></button>
+            </div>
+
+            <form asp-controller="Admin" asp-action="AddCopies" method="post" style="margin: 0;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="modalBookId" name="bookId" />
+
+                <div class="modal-body p-4 pt-2">
+
+                    <!-- Book Title Node -->
+                    <div class="mb-4 p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04);">
+                        <label class="d-block mb-1" style="color: #94a3b8; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;">Book Title</label>
+                        <div id="modalBookTitle" class="fw-bold text-white fs-6" style="line-height: 1.4; letter-spacing: -0.1px;">—</div>
+                    </div>
+
+                    <!-- Metrics Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="p-3 text-center rounded-3" style="background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15);">
+                                <span class="d-block mb-1" style="color: #cbd5e1; font-size: 0.75rem; font-weight: 600;">Current Available</span>
+                                <span id="modalCurrentAvail" class="fw-bold" style="color: #60a5fa; font-size: 1.4rem; font-family: monospace;">0</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 text-center rounded-3" style="background: rgba(245, 158, 11, 0.03); border: 1px solid rgba(245, 158, 11, 0.15);">
+                                <span class="d-block mb-1" style="color: #cbd5e1; font-size: 0.75rem; font-weight: 600;">Total Inventory</span>
+                                <span id="modalTotalCopies" class="fw-bold" style="color: #f59e0b; font-size: 1.4rem; font-family: monospace;">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Node -->
+                    <div class="mb-2">
+                        <label class="form-label d-block mb-2" style="color: #cbd5e1; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Number of New Copies to Add</label>
+                        <input type="number" name="additionalCopies" class="form-control text-white text-center fw-bold fs-5"
+                               style="background: #05070f; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px; font-family: monospace;"
+                               min="1" value="1" onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 10px rgba(16,185,129,0.2)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none';" required />
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="modal-footer border-0 p-4 pt-0 d-flex justify-content-end align-items-center gap-2">
+                    <button type="button" class="btn btn-link text-muted text-decoration-none fw-semibold p-0 me-2" data-bs-dismiss="modal" style="font-size: 0.85rem;">Cancel</button>
+                    <button type="submit" class="btn px-4 py-2 fw-bold" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; border-radius: 8px; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: all 0.2s;">
+                        Update Quantity
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openAddCopiesModal(id, title, avail, total) {
+            document.getElementById('modalBookId').value = id;
+            document.getElementById('modalBookTitle').innerText = title;
+            document.getElementById('modalCurrentAvail').innerText = avail;
+            document.getElementById('modalTotalCopies').innerText = total;
+
+            var modal = new bootstrap.Modal(document.getElementById('addCopiesModal'));
+            modal.show();
+        }
+    </script>
+}
