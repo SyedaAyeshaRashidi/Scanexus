@@ -76,11 +76,6 @@ CREATE TABLE ActivityLogs (
 );
 
 
-
-
-
-
-
 INSERT INTO Students (UniversityID, FullName, FatherName, Email, PasswordHash, Semester, Batch, IsActive)
 VALUES
 ('2024F-BS-0001', 'Ali Hassan',  'Hassan Khan', 'ali@ssuet.edu.pk',  'Pass@123', 4, '2024F', 1),
@@ -125,3 +120,20 @@ SET PasswordHash = 'B6BC7B58510319A151D168BA3D5AECB3AC0A9708D06DD930F37FBC89B6CD
 
 UPDATE Admins 
 SET PasswordHash = 'E86F78A8A3CAF0B60D8E74E5942AA6D86DC150CD3C03338AEF25B7D2D7E3ACC7';
+
+ALTER TABLE Students 
+ADD Department NVARCHAR(100) NOT NULL DEFAULT 'Computer Science';
+
+UPDATE Students 
+SET Department = 'Computer Science' 
+WHERE Batch = '2024F';
+
+Update Students SET UniversityID = '2023S-IT-0001' WHERE StudentID = 4
+
+UPDATE Students 
+SET PasswordHash = 'B6BC7B58510319A151D168BA3D5AECB3AC0A9708D06DD930F37FBC89B6CDC697' 
+WHERE UniversityID = '2023S-IT-0001';
+
+UPDATE Students SET PasswordHash = 'B6BC7B58510319A151D168BA3D5AECB3AC0A9708D06DD930F37FBC89B6CDC697' WHERE UniversityID = '2024F-BCS-106'
+
+SELECT * FROM Students
