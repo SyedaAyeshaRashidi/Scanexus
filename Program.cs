@@ -38,7 +38,7 @@ builder.Services.AddRateLimiter(options =>
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                PermitLimit = 20,              // 1 minute mein maximum 20 requests allowed hain
+                PermitLimit = 20,             
                 Window = TimeSpan.FromMinutes(1)
             }));
 
@@ -96,9 +96,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// 🛡️ SECURITY MIDDLEWARES: Safe intercept pipelines
+
 app.UseRateLimiter();
-app.UseAuthentication();   // 🔐 Token Check validation structure
+app.UseAuthentication();   
 app.UseSession();
 app.UseAuthorization();
 
