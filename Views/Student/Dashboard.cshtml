@@ -1,4 +1,4 @@
-@model LibrarySystem.Models.DashboardViewModel
+﻿@model LibrarySystem.Models.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -6,7 +6,6 @@
 
 @section Styles {
     <style>
-        /* Modern Premium Welcome Card */
         .welcome-bar {
             background: rgba(11, 11, 30, 0.6);
             backdrop-filter: blur(12px);
@@ -41,7 +40,6 @@
                 font-weight: 600;
             }
 
-        /* Action Buttons */
         .btn-borrow {
             background: linear-gradient(135deg, #2563eb, #4f46e5);
             box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
@@ -51,7 +49,7 @@
             font-weight: 600;
             padding: 0.7rem 1.4rem;
             border-radius: 12px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             text-decoration: none;
@@ -66,7 +64,6 @@
                 opacity: 0.95;
             }
 
-        /* Fluid Grid Stat Cards */
         .stat-card {
             background: rgba(11, 11, 30, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -113,7 +110,6 @@
             font-weight: 600;
         }
 
-        /* Content Sections */
         .section-card {
             background: rgba(11, 11, 30, 0.6);
             backdrop-filter: blur(10px);
@@ -142,32 +138,37 @@
                 font-size: 18px;
             }
 
-        /* Clean Matrix Table Style */
-        .table {
-            margin: 0;
-            color: #cbd5e1;
+        .scanexus-table {
+            width: 100% !important;
+            margin: 0 !important;
+            border-collapse: collapse;
         }
 
-            .table thead th {
-                background: rgba(5, 5, 15, 0.8);
-                color: #94a3b8;
+            .scanexus-table thead th {
+                background: rgba(5, 5, 15, 0.8) !important;
+                color: #94a3b8 !important;
                 font-size: 0.72rem;
                 letter-spacing: 1px;
                 text-transform: uppercase;
-                border-color: rgba(255, 255, 255, 0.05);
-                padding: 1rem 1.4rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                padding: 1rem 1.4rem !important;
                 font-weight: 600;
+                text-align: left;
             }
 
-            .table tbody td {
-                border-color: rgba(255, 255, 255, 0.03);
-                padding: 1.1rem 1.4rem;
+            .scanexus-table tbody td {
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+                padding: 1.2rem 1.4rem !important;
                 vertical-align: middle;
                 font-size: 0.92rem;
+                background: transparent !important;
+                color: #cbd5e1 !important;
+                text-align: left;
             }
 
-            .table tbody tr:hover td {
-                color: #fff;
+            .scanexus-table tbody tr:hover td {
+                color: #fff !important;
+                background: rgba(255, 255, 255, 0.02) !important;
             }
 
         .book-title {
@@ -183,14 +184,24 @@
             font-weight: 500;
         }
 
-        .txn-code {
-            color: #60a5fa;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        .txn-code-badge {
+            color: #60a5fa !important;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 0.85rem;
             font-weight: 500;
+            background: rgba(37, 99, 235, 0.08) !important;
+            border: 1px solid rgba(59, 130, 246, 0.15) !important;
+            padding: 6px 12px !important;
+            border-radius: 8px;
+            white-space: nowrap;
+            display: inline-block;
         }
 
-        /* Soft Glow Neon Status Badges */
+        .date-display-text {
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+
         .badge-active {
             background: rgba(34, 197, 94, 0.1);
             color: #86efac;
@@ -213,27 +224,13 @@
             display: inline-block;
         }
 
-        /* Action Controls Buttons */
-        .btn-return {
-            background: rgba(239, 68, 68, 0.06);
-            border: 1px solid rgba(239, 68, 68, 0.2);
+        .fine-text {
             color: #fca5a5;
-            font-size: 0.82rem;
-            font-weight: 600;
-            padding: 6px 16px;
-            border-radius: 10px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 700;
+            font-size: 0.9rem;
             white-space: nowrap;
         }
 
-            .btn-return:hover {
-                background: rgba(239, 68, 68, 0.15);
-                border-color: #ef4444;
-                color: #fca5a5;
-                transform: scale(0.98);
-            }
-
-        /* Styled Empty States Grid */
         .empty-state {
             text-align: center;
             padding: 4rem 1.5rem;
@@ -252,49 +249,9 @@
                 text-decoration: none;
                 font-weight: 600;
             }
-
-                .empty-state a:hover {
-                    text-decoration: underline;
-                }
-
-        /* Uniform Custom System Notification Alerts */
-        .alert-s {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.2);
-            color: #86efac;
-            border-radius: 12px;
-            padding: 0.85rem 1.2rem;
-            font-size: 0.9rem;
-            margin-bottom: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-e {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-            border-radius: 12px;
-            padding: 0.85rem 1.2rem;
-            font-size: 0.9rem;
-            margin-bottom: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .table tbody tr td {
-            background: transparent !important;
-        }
-
-        .table tbody tr:hover td {
-            background: rgba(255, 255, 255, 0.02) !important;
-        }
     </style>
 }
 
-<!-- Welcome Bar Header Profile -->
 <div class="welcome-bar">
     <div>
         <div class="welcome-name">@Model.Student.FullName</div>
@@ -309,17 +266,22 @@
     </a>
 </div>
 
-<!-- Context Message Box Stream -->
-@if (TempData["Success"] != null)
+@if (ViewBag.OverdueNotifications != null && ((IEnumerable<dynamic>)ViewBag.OverdueNotifications).Any())
 {
-    <div class="alert-s"><i class="bi bi-check-circle-fill"></i>@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert-e"><i class="bi bi-exclamation-triangle-fill"></i>@TempData["Error"]</div>
+    foreach (var noti in ViewBag.OverdueNotifications)
+    {
+        <div class="alert alert-danger d-flex align-items-center justify-content-between fade show" role="alert" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); color: #fca5a5; border-radius: 12px; padding: 0.9rem 1.4rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 1.2rem; flex-shrink: 0;"></i>
+                <div>
+                    <strong class="text-white">Overdue Warning:</strong> @noti.Message
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.75rem; box-shadow: none; outline: none; border: none;"></button>
+        </div>
+    }
 }
 
-<!-- Quantitative Analytics Cards -->
 <div class="row g-4 mb-4">
     <div class="col-md-4">
         <div class="stat-card">
@@ -356,7 +318,6 @@
     </div>
 </div>
 
-<!-- Inventory Operations Stream Table -->
 <div class="section-card">
     <div class="section-header">
         <i class="bi bi-journal-check"></i> Currently Borrowed Books
@@ -371,15 +332,15 @@
     else
     {
         <div class="table-responsive">
-            <table class="table align-middle">
+            <table class="table scanexus-table">
                 <thead>
                     <tr>
-                        <th>Book Details</th>
-                        <th>Transaction ID</th>
-                        <th>Issue Date</th>
-                        <th>Due Date</th>
-                        <th>Status</th>
-                        @* <th>Actions</th> *@
+                        <th style="width: 25%;">Book Details</th>
+                        <th style="width: 25%;">Transaction ID</th>
+                        <th style="width: 15%;">Issue Date</th>
+                        <th style="width: 15%;">Due Date</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 10%;">Est. Fine</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -390,42 +351,37 @@
                                 <div class="book-title">@t.Book?.Title</div>
                                 <div class="book-author">@t.Book?.Author</div>
                             </td>
-                            <td><span class="txn-code">@t.TxnCode</span></td>
-                            <td><span class="date-text">@t.IssueDate.ToString("dd MMM yyyy")</span></td>
+                            <td><span class="txn-code-badge">@t.TxnCode</span></td>
+                            <td><span class="date-display-text">@t.IssueDate.ToString("dd MMM yyyy")</span></td>
                             <td>
                                 @if (t.IsOverdue)
                                 {
-                                    <span style="color: #fca5a5; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-                                        @t.DueDate.ToString("dd MMM yyyy")
-                                        <span class="badge-overdue" style="padding: 2px 6px; font-size: 0.65rem;">Overdue</span>
-                                    </span>
+                                    <span style="color: #fca5a5; font-weight: 600;">@t.DueDate.ToString("dd MMM yyyy")</span>
                                 }
                                 else
                                 {
-                                    <span style="color: #facc15; font-weight: 500;">
-                                        @t.DueDate.ToString("dd MMM yyyy")
-                                    </span>
+                                    <span style="color: #facc15; font-weight: 500;">@t.DueDate.ToString("dd MMM yyyy")</span>
                                 }
                             </td>
                             <td>
                                 @if (t.IsOverdue)
                                 {
-                                    <span class="badge-overdue">@t.Status</span>
+                                    <span class="badge-overdue">Overdue</span>
                                 }
                                 else
                                 {
-                                    <span class="badge-active">@t.Status</span>
+                                    <span class="badge-active">Active</span>
                                 }
                             </td>
                             <td>
-                                @* <form asp-controller="Student" asp-action="Return" method="post" style="margin:0;">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="txnCode" value="@t.TxnCode" />
-                                    <button class="btn-return" type="submit"
-                                            onclick="return confirm('Return this book?')">
-                                        <i class="bi bi-arrow-return-left me-1"></i>Return
-                                    </button>
-                                </form> *@
+                                @if (t.IsOverdue)
+                                {
+                                    <span class="fine-text">Rs. @t.CalculatedFine</span>
+                                }
+                                else
+                                {
+                                    <span style="color:#475569; font-weight: 500;">—</span>
+                                }
                             </td>
                         </tr>
                     }
@@ -434,3 +390,49 @@
         </div>
     }
 </div>
+
+@if (Model.History.Any())
+{
+    <div class="section-card">
+        <div class="section-header">
+            <i class="bi bi-clock-history"></i> Borrowing History
+        </div>
+        <div class="table-responsive">
+            <table class="table scanexus-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Book Details</th>
+                        <th style="width: 25%;">Transaction ID</th>
+                        <th style="width: 15%;">Issue Date</th>
+                        <th style="width: 15%;">Return Date</th>
+                        <th style="width: 15%;">Fine Paid</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.History)
+                    {
+                        <tr>
+                            <td>
+                                <div class="book-title">@t.Book?.Title</div>
+                                <div class="book-author">@t.Book?.Author</div>
+                            </td>
+                            <td><span class="txn-code-badge">@t.TxnCode</span></td>
+                            <td><span class="date-display-text">@t.IssueDate.ToString("dd MMM yyyy")</span></td>
+                            <td><span class="date-display-text">@(t.ReturnDate?.ToString("dd MMM yyyy") ?? "—")</span></td>
+                            <td>
+                                @if (t.FineAmount > 0)
+                                {
+                                    <span class="fine-text">Rs. @t.FineAmount</span>
+                                }
+                                else
+                                {
+                                    <span style="color:#475569; font-weight: 500;">None</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

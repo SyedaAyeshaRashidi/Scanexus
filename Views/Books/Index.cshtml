@@ -32,9 +32,10 @@
 
         .page-sub {
             font-size: 0.88rem;
-            color: #64748b;
+            color: #cbd5e1 !important;
             margin: 4px 0 0;
             font-weight: 500;
+            opacity: 0.9;
         }
 
         .btn-back-dashboard {
@@ -222,6 +223,10 @@
             padding: 2.5rem 1rem;
             color: #475569;
             font-size: 0.82rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
 
             .qr-locked i {
@@ -257,6 +262,7 @@
         @@keyframes modalFadeIn {
             from {
                 opacity: 0;
+                transform: scale(0.95);
                 transform: scale(0.95);
             }
 
@@ -323,7 +329,7 @@
 
                 .receipt-row .value.txn {
                     color: #60a5fa;
-                    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
                     font-size: 0.85rem;
                 }
 
@@ -348,7 +354,7 @@
 
             .btn-done:hover {
                 opacity: 0.95;
-                scale: 0.99;
+                transform: scale(0.99);
             }
 
         .scanner-modal-content {
@@ -411,7 +417,7 @@
                 </div>
                 <div class="receipt-row">
                     <span class="label">Return Deadline</span>
-                    <span class="value due">@receipt.GetProperty("DueDate").GetString()</span>
+                    <span class="value tenderness due">@receipt.GetProperty("DueDate").GetString()</span>
                 </div>
             </div>
             <button class="btn-done" onclick="document.getElementById('receiptModal').remove()">Dismiss Voucher</button>
@@ -507,22 +513,71 @@
     <div class="alert-e"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]</div>
 }
 
-<div class="row g-4">
+<!-- 🧠 DYNAMIC ML.NET AI RECOMMENDATION MATRIX VIEW ROW -->
+@if (ViewBag.AIRecommendations != null && ((List<LibrarySystem.Models.Book>)ViewBag.AIRecommendations).Any())
+{
+    var aiBooksList = (List<LibrarySystem.Models.Book>)ViewBag.AIRecommendations;
+
+    // 🎨 UI Aesthetic Theme Color Maps (Matching your AI palette constraints)
+    string[] backColors = { "rgba(59, 130, 246, 0.04)", "rgba(168, 85, 247, 0.04)", "rgba(236, 72, 153, 0.04)" };
+    string[] borderColors = { "rgba(59, 130, 246, 0.15)", "rgba(168, 85, 247, 0.15)", "rgba(236, 72, 153, 0.15)" };
+    string[] textColors = { "#60a5fa", "#c084fc", "#f472b6" };
+    string[] badgeBacks = { "rgba(59, 130, 246, 0.1)", "rgba(168, 85, 247, 0.1)", "rgba(236, 72, 153, 0.1)" };
+
+    <div class="mb-5" style="background: rgba(11, 11, 30, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 1.8rem;">
+        <h5 class="text-white fw-bold mb-4 d-flex align-items-center gap-2" style="font-size: 1.1rem; letter-spacing: -0.2px;">
+            <i class="bi bi-stars" style="color: #a855f7; font-size: 1.2rem;"></i> Recommended for You
+        </h5>
+
+        <div class="row g-4">
+            @for (int i = 0; i < aiBooksList.Count; i++)
+            {
+                var aiBook = aiBooksList[i];
+                int colorIdx = i % 3;
+
+                <div class="col-md-4">
+                    <div class="p-4 h-100 d-flex flex-column justify-content-between book-card-ai"
+                         style="background: @backColors[colorIdx]; border: 1px solid @borderColors[colorIdx]; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); transition: all 0.25s ease; cursor: pointer;"
+                         onclick="openBookDetail('@aiBook.QRCode', '@aiBook.Title.Replace("'", "\\'")', '@aiBook.Author.Replace("'", "\\'")')"
+                         onmouseover="this.style.borderColor='@textColors[colorIdx]'; this.style.transform='translateY(-3px)'"
+                         onmouseout="this.style.borderColor='@borderColors[colorIdx]'; this.style.transform='none'">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <span class="badge" style="background: @badgeBacks[colorIdx]; color: @textColors[colorIdx]; border: 1px solid @borderColors[colorIdx]; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 5px 10px; border-radius: 6px;">
+                                    Suggested Reading
+                                </span>
+                                <i class="bi bi-cpu text-muted opacity-25" style="font-size: 1.1rem; color: @textColors[colorIdx] !important;"></i>
+                            </div>
+
+                            <div class="fw-bold text-white mb-1" style="font-size: 1.05rem; line-height: 1.4; letter-spacing: -0.2px;">@aiBook.Title</div>
+                            <div style="color: #94a3b8; font-size: 0.85rem; font-weight: 500;">By @aiBook.Author</div>
+                        </div>
+
+                        <div class="mt-4 pt-3 d-flex justify-content-between align-items-center" style="border-top: 1px solid rgba(255,255,255,0.04);">
+                            <span class="d-flex align-items-center gap-2 small fw-semibold" style="color: #4ade80; font-size: 0.8rem;">
+                                <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; display: inline-block; filter: drop-shadow(0 0 4px #22c55e);"></span> Available
+                            </span>
+                            <span class="small fw-bold text-primary d-flex align-items-center gap-1" style="color: @textColors[colorIdx] !important; font-size: 0.85rem;">
+                                Quick Open <i class="bi bi-chevron-right" style="font-size: 0.75rem;"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- MAIN CATALOG GRID -->
+<div class="row g-4 mb-5">
     @foreach (var book in Model)
     {
         bool available = book.AvailableCopies > 0;
         <div class="col-sm-6 col-md-4 col-lg-3">
-            <div class="book-card"
-                 data-qr="@book.QRCode"
-                 data-title="@book.Title"
-                 data-author="@book.Author">
-                <div class="book-icon-wrap">
-                    <i class="bi bi-book-fill"></i>
-                </div>
-
+            <div class="book-card" data-qr="@book.QRCode" data-title="@book.Title" data-author="@book.Author">
+                <div class="book-icon-wrap"><i class="bi bi-book-fill"></i></div>
                 <div class="book-title">@book.Title</div>
                 <div class="book-author">@book.Author</div>
-
                 <div class="copies-wrap">
                     @for (int i = 1; i <= book.TotalCopies; i++)
                     {
@@ -530,7 +585,6 @@
                     }
                 </div>
                 <div class="copies-label">@book.AvailableCopies of @book.TotalCopies available</div>
-
                 @if (available)
                 {
                     <span class="status-pill status-available">AVAILABLE</span>
@@ -600,7 +654,6 @@
                             '<div class="qr-locked"><i class="bi bi-lock-fill"></i>You have not borrowed this book</div>';
                     }
 
-                    // Attach click handlers to newly created scan buttons
                     document.querySelectorAll('[data-scan-qr]').forEach(function (btn) {
                         btn.addEventListener('click', function () {
                             startScannerForBook(btn.getAttribute('data-scan-qr'), btn.getAttribute('data-scan-mode'));
